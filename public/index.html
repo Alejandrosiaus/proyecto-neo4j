@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudShield · Neo4j Banking</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070a0f;
+    --surface: #0d1117;
+    --card: #111820;
+    --border: #1e2d3d;
+    --accent: #00d4ff;
+    --accent2: #ff4757;
+    --accent3: #2ed573;
+    --accent4: #ffa502;
+    --text: #c9d1d9;
+    --text-dim: #58a6b0;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,10,15,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo { display: flex; align-items: center; gap: .75rem; }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent); border-radius: 6px;
+    display: grid; place-items: center; font-size: 16px;
+  }
+  .logo-text { font-family: var(--sans); font-weight: 800; font-size: 1.1rem; letter-spacing: -.02em; }
+  .logo-text span { color: var(--accent); }
+  .status-dot {
+    display: flex; align-items: center; gap: .5rem;
+    font-family: var(--mono); font-size: .75rem; color: var(--accent3);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+  /* ── LAYOUT ── */
+  .shell { display: flex; min-height: calc(100vh - 60px); }
+  nav {
+    width: 220px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;
+  }
+  nav .section-label {
+    font-family: var(--mono); font-size: .65rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: .1em;
+    padding: .75rem 1.25rem .25rem;
+  }
+  nav a {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .55rem 1.25rem;
+    color: var(--text); text-decoration: none;
+    font-size: .88rem; font-weight: 600;
+    border-left: 2px solid transparent;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  nav a:hover, nav a.active {
+    color: var(--accent); background: rgba(0,212,255,.06);
+    border-left-color: var(--accent);
+  }
+  nav a .icon { font-size: 1rem; width: 18px; text-align: center; }
+
+  main { flex: 1; padding: 2rem; position: relative; z-index: 1; }
+
+  /* ── SECTION VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+  h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: .25rem; }
+  .subtitle { font-family: var(--mono); font-size: .8rem; color: var(--text-dim); margin-bottom: 1.75rem; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+  }
+  .stat-label { font-family: var(--mono); font-size: .7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+  .stat-value { font-size: 1.9rem; font-weight: 800; margin-top: .2rem; line-height: 1; }
+  .stat-value.cyan { color: var(--accent); }
+  .stat-value.red { color: var(--accent2); }
+  .stat-value.green { color: var(--accent3); }
+  .stat-value.yellow { color: var(--accent4); }
+
+  /* ── CARDS / PANELS ── */
+  .panel {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .panel-title { font-weight: 700; font-size: 1rem; }
+  .panel-tag {
+    font-family: var(--mono); font-size: .7rem; padding: .2rem .6rem;
+    background: rgba(0,212,255,.1); color: var(--accent); border-radius: 4px;
+  }
+  .panel-tag.red { background: rgba(255,71,87,.1); color: var(--accent2); }
+  .panel-tag.green { background: rgba(46,213,115,.1); color: var(--accent3); }
+
+  /* ── FORMS ── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: .4rem; }
+  label { font-size: .8rem; font-weight: 600; color: var(--text-dim); }
+  input, select, textarea {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 7px; padding: .6rem .85rem;
+    font-family: var(--mono); font-size: .85rem;
+    outline: none; transition: border .15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 80px; font-family: var(--sans); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .6rem 1.25rem; border-radius: 7px;
+    font-family: var(--sans); font-weight: 700; font-size: .85rem;
+    border: none; cursor: pointer; transition: all .15s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { opacity: .85; transform: translateY(-1px); }
+  .btn-danger { background: var(--accent2); color: #fff; }
+  .btn-danger:hover { opacity: .85; }
+  .btn-success { background: var(--accent3); color: var(--bg); }
+  .btn-success:hover { opacity: .85; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: .35rem .8rem; font-size: .8rem; }
+  .btn-row { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th { text-align: left; padding: .7rem 1rem; font-family: var(--mono); font-size: .7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+  td { padding: .7rem 1rem; border-bottom: 1px solid rgba(30,45,61,.5); }
+  tr:hover td { background: rgba(0,212,255,.03); }
+  .badge {
+    display: inline-block; padding: .15rem .55rem; border-radius: 4px;
+    font-family: var(--mono); font-size: .7rem; font-weight: 600;
+  }
+  .badge-green { background: rgba(46,213,115,.15); color: var(--accent3); }
+  .badge-red { background: rgba(255,71,87,.15); color: var(--accent2); }
+  .badge-cyan { background: rgba(0,212,255,.15); color: var(--accent); }
+  .badge-yellow { background: rgba(255,165,2,.15); color: var(--accent4); }
+
+  /* ── FILTERS BAR ── */
+  .filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: flex-end; }
+  .filters .form-group { flex: 1; min-width: 150px; }
+
+  /* ── FRAUD ALERT ── */
+  .alert-card {
+    background: linear-gradient(135deg, rgba(255,71,87,.08), rgba(255,71,87,.02));
+    border: 1px solid rgba(255,71,87,.3); border-radius: 10px;
+    padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+  }
+  .alert-header { display: flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--accent2); margin-bottom: .5rem; }
+  .alert-body { font-size: .85rem; color: var(--text-dim); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem 1.5rem;
+    font-size: .9rem; min-width: 280px;
+    transform: translateY(120%); transition: transform .25s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  }
+  #toast.show { transform: translateY(0); }
+  #toast.success { border-color: var(--accent3); }
+  #toast.error { border-color: var(--accent2); }
+
+  /* ── LOADING ── */
+  .loading { display: flex; align-items: center; gap: .75rem; color: var(--text-dim); font-family: var(--mono); font-size: .85rem; padding: 2rem; }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 10px;
+    padding: 2.5rem; text-align: center; cursor: pointer;
+    transition: border .2s;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone input { display: none; }
+  .upload-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .upload-text { color: var(--text-dim); font-size: .9rem; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { display: none; }
+    main { padding: 1rem; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-dim); font-family: var(--mono); font-size: .85rem; }
+  .chip-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+  .chip { background: rgba(0,212,255,.1); color: var(--accent); border-radius: 4px; padding: .2rem .6rem; font-family: var(--mono); font-size: .7rem; }
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div class="logo-text">Fraud<span>Shield</span></div>
+  </div>
+  <div class="status-dot">
+    <div class="dot"></div>
+    <span id="conn-status">Conectando...</span>
+  </div>
+</header>
+
+<div class="shell">
+  <nav>
+    <div class="section-label">Dashboard</div>
+    <a class="active" data-view="dashboard"><span class="icon">📊</span> Inicio</a>
+    <a data-view="fraude"><span class="icon">🚨</span> Alertas Fraude</a>
+
+    <div class="section-label">CRUD Nodos</div>
+    <a data-view="usuarios"><span class="icon">👤</span> Usuarios</a>
+    <a data-view="cuentas"><span class="icon">🏦</span> Cuentas</a>
+    <a data-view="transacciones"><span class="icon">💸</span> Transacciones</a>
+    <a data-view="dispositivos"><span class="icon">📱</span> Dispositivos</a>
+    <a data-view="ubicaciones"><span class="icon">📍</span> Ubicaciones</a>
+
+    <div class="section-label">Operaciones</div>
+    <a data-view="relaciones"><span class="icon">🔗</span> Relaciones</a>
+    <a data-view="cargar-csv"><span class="icon">📂</span> Cargar CSV</a>
+    <a data-view="estadisticas"><span class="icon">📈</span> Estadísticas</a>
+  </nav>
+
+  <main>
+    <!-- ══ DASHBOARD ══ -->
+    <div id="v-dashboard" class="view active">
+      <h1>Sistema de Detección de Fraude</h1>
+      <p class="subtitle">// Neo4j Graph Database · Universidad del Valle de Guatemala · CC3089</p>
+      <div class="stats-grid" id="stats-grid">
+        <div class="loading"><div class="spinner"></div>Cargando métricas...</div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Transacciones por Tipo</div>
+          <span class="panel-tag">AGREGACIÓN</span>
+        </div>
+        <div id="tipo-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div>Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTAS DE FRAUDE ══ -->
+    <div id="v-fraude" class="view">
+      <h1>Alertas de Fraude</h1>
+      <p class="subtitle">// Patrones sospechosos detectados mediante Cypher queries</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🔴 Transacciones Fraudulentas</div>
+          <button class="btn btn-danger btn-sm" onclick="loadFraudeTransacciones()">Actualizar</button>
+        </div>
+        <div id="fraude-txn-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">⚠️ Dispositivos Compartidos</div>
+          <span class="panel-tag red">SOSPECHOSO</span>
+        </div>
+        <div id="disp-compartido-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🔄 Transferencias Circulares</div>
+          <span class="panel-tag red">LOOP DETECTADO</span>
+        </div>
+        <div id="circular-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">👥 Usuarios de Alto Riesgo</div>
+          <span class="panel-tag red">TOP RIESGO</span>
+        </div>
+        <div id="riesgo-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ USUARIOS ══ -->
+    <div id="v-usuarios" class="view">
+      <h1>Gestión de Usuarios</h1>
+      <p class="subtitle">// CREATE · READ · UPDATE · DELETE</p>
+
+      <!-- Crear usuario -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Crear Nuevo Usuario</div>
+          <span class="panel-tag green">CREATE</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre completo *</label>
+            <input id="u-nombre" type="text" placeholder="Ana García López">
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input id="u-email" type="email" placeholder="ana@banco.com">
+          </div>
+          <div class="form-group">
+            <label>Fecha Registro *</label>
+            <input id="u-fecha" type="date" value="2024-01-15">
+          </div>
+          <div class="form-group">
+            <label>Score Crédito</label>
+            <input id="u-score" type="number" min="300" max="850" placeholder="720">
+          </div>
+          <div class="form-group">
+            <label>Ocupación</label>
+            <select id="u-ocupacion">
+              <option>Empleado</option><option>Empresario</option>
+              <option>Estudiante</option><option>Independiente</option><option>Jubilado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input id="u-telefono" type="text" placeholder="+502 12345678">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label>Labels extra (nodo con 2+ labels)</label>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
+            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
+              <input type="checkbox" value="ClienteVIP" class="u-label-extra"> ClienteVIP
+            </label>
+            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
+              <input type="checkbox" value="Sospechoso" class="u-label-extra"> Sospechoso
+            </label>
+            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
+              <input type="checkbox" value="Corporativo" class="u-label-extra"> Corporativo
+            </label>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="crearUsuario()">➕ Crear Usuario (1 label)</button>
+          <button class="btn btn-success" onclick="crearUsuarioMultiLabel()">🏷 Crear con Multi-Label</button>
+        </div>
+      </div>
+
+      <!-- Filtros y tabla -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Lista de Usuarios</div>
+          <span class="panel-tag">READ</span>
+        </div>
+        <div class="filters">
+          <div class="form-group">
+            <label>Buscar nombre</label>
+            <input id="f-u-nombre" type="text" placeholder="Buscar...">
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="f-u-estado">
+              <option value="">Todos</option>
+              <option value="true">Activo</option>
+              <option value="false">Inactivo</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-ghost" onclick="loadUsuarios()">🔍 Filtrar</button>
+          </div>
+        </div>
+
+        <!-- UPDATE/DELETE form inline -->
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
+          <input id="upd-u-id" type="number" placeholder="ID Usuario" style="width:130px">
+          <input id="upd-u-campo" type="text" placeholder="Campo (ej: estado)" style="width:160px">
+          <input id="upd-u-valor" type="text" placeholder="Nuevo valor" style="width:160px">
+          <button class="btn btn-primary btn-sm" onclick="actualizarUsuario()">✏️ Actualizar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarUsuario()">🗑 Eliminar</button>
+        </div>
+
+        <div id="usuarios-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div>Cargando usuarios...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CUENTAS ══ -->
+    <div id="v-cuentas" class="view">
+      <h1>Gestión de Cuentas</h1>
+      <p class="subtitle">// Cuentas bancarias vinculadas a usuarios</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Crear Cuenta</div>
+          <span class="panel-tag green">CREATE</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>ID Usuario propietario *</label>
+            <input id="c-id-usuario" type="number" placeholder="12345">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Cuenta *</label>
+            <select id="c-tipo">
+              <option>Ahorro</option><option>Corriente</option>
+              <option>Inversión</option><option>Empresarial</option><option>Nómina</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Saldo inicial</label>
+            <input id="c-saldo" type="number" step="0.01" placeholder="5000.00">
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="c-moneda">
+              <option>GTQ</option><option>USD</option><option>EUR</option><option>MXN</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Límite diario</label>
+            <input id="c-limite" type="number" placeholder="10000">
+          </div>
+          <div class="form-group">
+            <label>Fecha creación</label>
+            <input id="c-fecha" type="date" value="2024-01-01">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="crearCuenta()">➕ Crear Cuenta</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Lista de Cuentas</div></div>
+        <div class="filters">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="f-c-tipo">
+              <option value="">Todos</option>
+              <option>Ahorro</option><option>Corriente</option><option>Inversión</option><option>Empresarial</option><option>Nómina</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Saldo mínimo</label>
+            <input id="f-c-min" type="number" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>Saldo máximo</label>
+            <input id="f-c-max" type="number" placeholder="999999">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-ghost" onclick="loadCuentas()">🔍 Filtrar</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
+          <input id="upd-c-id" type="number" placeholder="ID Cuenta" style="width:130px">
+          <input id="upd-c-campo" type="text" placeholder="Campo" style="width:140px">
+          <input id="upd-c-valor" type="text" placeholder="Nuevo valor" style="width:150px">
+          <button class="btn btn-primary btn-sm" onclick="actualizarCuenta()">✏️ Actualizar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarCuenta()">🗑 Eliminar</button>
+        </div>
+        <div id="cuentas-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div>Cargando cuentas...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TRANSACCIONES ══ -->
+    <div id="v-transacciones" class="view">
+      <h1>Transacciones</h1>
+      <p class="subtitle">// Flujos de dinero entre cuentas</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Crear Transacción</div>
+          <span class="panel-tag green">CREATE</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Cuenta Origen (ID) *</label>
+            <input id="t-origen" type="number" placeholder="101">
+          </div>
+          <div class="form-group">
+            <label>Cuenta Destino (ID) *</label>
+            <input id="t-destino" type="number" placeholder="202">
+          </div>
+          <div class="form-group">
+            <label>Monto *</label>
+            <input id="t-monto" type="number" step="0.01" placeholder="1500.00">
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="t-tipo">
+              <option>Transferencia</option><option>Pago</option>
+              <option>Retiro</option><option>Depósito</option><option>Compra</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Canal</label>
+            <select id="t-canal">
+              <option>App Móvil</option><option>Web</option>
+              <option>ATM</option><option>Sucursal</option><option>Telefónico</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="t-moneda">
+              <option>GTQ</option><option>USD</option><option>EUR</option><option>MXN</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Dispositivo</label>
+            <input id="t-dispositivo" type="number" placeholder="1">
+          </div>
+          <div class="form-group">
+            <label>ID Ubicación</label>
+            <input id="t-ubicacion" type="number" placeholder="1">
+          </div>
+          <div class="form-group">
+            <label>Fecha</label>
+            <input id="t-fecha" type="date" value="2025-01-15">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="crearTransaccion()">➕ Registrar Transacción</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Listado de Transacciones</div></div>
+        <div class="filters">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="f-t-tipo">
+              <option value="">Todos</option>
+              <option>Transferencia</option><option>Pago</option>
+              <option>Retiro</option><option>Depósito</option><option>Compra</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fraudulenta</label>
+            <select id="f-t-fraude">
+              <option value="">Todos</option>
+              <option value="true">Sí</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto mín</label>
+            <input id="f-t-min" type="number" placeholder="0">
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-ghost" onclick="loadTransacciones()">🔍 Filtrar</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
+          <input id="upd-t-id" type="number" placeholder="ID Transacción" style="width:160px">
+          <button class="btn btn-danger btn-sm" onclick="eliminarTransaccion()">🗑 Eliminar</button>
+          <button class="btn btn-primary btn-sm" onclick="marcarFraudulenta()">⚠️ Marcar como Fraudulenta</button>
+        </div>
+        <div id="transacciones-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div>Cargando transacciones...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DISPOSITIVOS ══ -->
+    <div id="v-dispositivos" class="view">
+      <h1>Dispositivos</h1>
+      <p class="subtitle">// Dispositivos registrados en el sistema</p>
+      <div class="panel">
+        <div class="filters">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="f-d-tipo">
+              <option value="">Todos</option>
+              <option>Móvil</option><option>Computadora</option><option>Tablet</option><option>ATM</option><option>POS</option>
+            </select>
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <label>&nbsp;</label>
+            <button class="btn btn-ghost" onclick="loadDispositivos()">🔍 Buscar</button>
+          </div>
+        </div>
+        <div id="dispositivos-table" class="table-wrap">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ UBICACIONES ══ -->
+    <div id="v-ubicaciones" class="view">
+      <h1>Ubicaciones</h1>
+      <p class="subtitle">// Ubicaciones geográficas registradas</p>
+      <div class="panel">
+        <div class="btn-row" style="margin-top:0;margin-bottom:1rem">
+          <button class="btn btn-ghost" onclick="loadUbicaciones()">🔄 Cargar Ubicaciones</button>
+        </div>
+        <div id="ubicaciones-table" class="table-wrap">
+          <div class="empty-state">Haz clic en Cargar Ubicaciones</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RELACIONES ══ -->
+    <div id="v-relaciones" class="view">
+      <h1>Gestión de Relaciones</h1>
+      <p class="subtitle">// Crear, actualizar y eliminar relaciones entre nodos</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Crear Relación con Propiedades</div>
+          <span class="panel-tag green">CREATE REL</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Tipo Nodo Origen</label>
+            <select id="r-tipo-origen">
+              <option>Usuario</option><option>Cuenta</option>
+              <option>Transaccion</option><option>Dispositivo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Nodo Origen</label>
+            <input id="r-id-origen" type="number" placeholder="123">
+          </div>
+          <div class="form-group">
+            <label>Tipo Relación</label>
+            <select id="r-tipo-rel">
+              <option>TIENE</option><option>USA</option><option>REALIZA</option>
+              <option>ORIGEN</option><option>DESTINO</option><option>REGISTRADO_EN</option>
+              <option>UBICADO_EN</option><option>OCURRE_EN</option><option>PERTENECE_A</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tipo Nodo Destino</label>
+            <select id="r-tipo-destino">
+              <option>Cuenta</option><option>Usuario</option>
+              <option>Dispositivo</option><option>Ubicacion</option><option>Transaccion</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Nodo Destino</label>
+            <input id="r-id-destino" type="number" placeholder="456">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label>Propiedades (JSON) — mín 3 requeridas</label>
+          <textarea id="r-props" rows="3">{"fecha": "2025-01-01", "activo": true, "tipo_relacion": "Titular"}</textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="crearRelacion()">🔗 Crear Relación</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Actualizar / Eliminar Relaciones</div>
+          <span class="panel-tag">UPDATE · DELETE</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Tipo Nodo Origen</label>
+            <select id="r2-tipo-origen">
+              <option>Usuario</option><option>Cuenta</option><option>Transaccion</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Origen</label>
+            <input id="r2-id-origen" type="number" placeholder="123">
+          </div>
+          <div class="form-group">
+            <label>Tipo Relación</label>
+            <input id="r2-tipo-rel" type="text" placeholder="TIENE">
+          </div>
+          <div class="form-group">
+            <label>Tipo Nodo Destino</label>
+            <select id="r2-tipo-destino">
+              <option>Cuenta</option><option>Usuario</option>
+              <option>Dispositivo</option><option>Ubicacion</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ID Destino</label>
+            <input id="r2-id-destino" type="number" placeholder="456">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label>Updates (JSON)</label>
+          <textarea id="r2-updates" rows="2">{"activo": false}</textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="actualizarRelacion()">✏️ Actualizar Relación</button>
+          <button class="btn btn-danger" onclick="eliminarRelacion()">🗑 Eliminar Relación</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CARGAR CSV ══ -->
+    <div id="v-cargar-csv" class="view">
+      <h1>Cargar Datos CSV</h1>
+      <p class="subtitle">// Importar nuevos nodos desde archivo CSV</p>
+
+      <div class="panel">
+        <div class="alert-card">
+          <div class="alert-header">📋 Formato requerido</div>
+          <div class="alert-body">
+            <strong>Usuarios:</strong> id_usuario, nombre, email, fecha_registro, estado, telefono, ocupacion, score_credito<br>
+            <strong>Cuentas:</strong> id_cuenta, tipo, saldo, fecha_creacion, estado, moneda, limite_diario<br>
+            <strong>Transacciones:</strong> id_transaccion, monto, fecha, tipo, es_fraudulenta, moneda, descripcion, canal
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1.25rem">
+          <label>Tipo de nodo a importar</label>
+          <select id="csv-tipo-nodo">
+            <option>Usuario</option>
+            <option>Cuenta</option>
+            <option>Transaccion</option>
+          </select>
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('csv-file').click()" style="margin-top:1rem">
+          <input type="file" id="csv-file" accept=".csv" onchange="previewCSV(this)">
+          <div class="upload-icon">📂</div>
+          <div class="upload-text">Haz clic para seleccionar archivo CSV</div>
+          <div id="csv-preview" style="margin-top:.75rem;font-family:var(--mono);font-size:.8rem;color:var(--accent)"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="cargarCSV()">⬆️ Importar Nodos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ESTADÍSTICAS ══ -->
+    <div id="v-estadisticas" class="view">
+      <h1>Estadísticas y Agregaciones</h1>
+      <p class="subtitle">// Consultas agregadas sobre el grafo</p>
+      <div class="panel">
+        <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
+          <button class="btn btn-primary" onclick="loadEstadisticasTipo()">📊 Cargar Datos</button>
+        </div>
+        <div id="estadisticas-content">
+          <div class="empty-state">Haz clic en Cargar Datos</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000/api';
+
+// ── NAVEGACIÓN ──────────────────────────────────────────
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelectorAll('nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    const view = a.dataset.view;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`v-${view}`).classList.add('active');
+    if (view === 'dashboard') loadDashboard();
+    if (view === 'usuarios') loadUsuarios();
+    if (view === 'cuentas') loadCuentas();
+    if (view === 'transacciones') loadTransacciones();
+    if (view === 'dispositivos') loadDispositivos();
+    if (view === 'fraude') loadFraudeAll();
+  });
+});
+
+// ── TOAST ────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+  t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ── HEALTH CHECK ─────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    const d = await r.json();
+    document.getElementById('conn-status').textContent = d.success ? 'Neo4j Conectado' : 'Sin conexión';
+  } catch { document.getElementById('conn-status').textContent = 'Sin conexión al servidor'; }
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const r = await fetch(`${API}/estadisticas`);
+    const { data: d } = await r.json();
+    const pctFraude = ((d.transacciones_fraude / d.total_transacciones) * 100).toFixed(1);
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Usuarios</div><div class="stat-value cyan">${d.total_usuarios.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Cuentas</div><div class="stat-value cyan">${d.total_cuentas.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Transacciones</div><div class="stat-value cyan">${d.total_transacciones.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Fraudes</div><div class="stat-value red">${d.transacciones_fraude.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">% Fraude</div><div class="stat-value yellow">${pctFraude}%</div></div>
+      <div class="stat-card"><div class="stat-label">Dispositivos</div><div class="stat-value green">${d.total_dispositivos.toLocaleString()}</div></div>
+      <div class="stat-card"><div class="stat-label">Monto Total</div><div class="stat-value green">Q${Number(d.monto_total).toLocaleString('es', {maximumFractionDigits:0})}</div></div>
+      <div class="stat-card"><div class="stat-label">Monto Máximo</div><div class="stat-value yellow">Q${Number(d.monto_maximo).toLocaleString('es', {maximumFractionDigits:0})}</div></div>
+    `;
+  } catch(e) {
+    document.getElementById('stats-grid').innerHTML = `<div class="alert-card"><div class="alert-header">Sin conexión al backend</div><div class="alert-body">Verifica que el servidor esté corriendo en localhost:3000</div></div>`;
+  }
+  loadTipoTransaccion();
+}
+
+async function loadTipoTransaccion() {
+  try {
+    const r = await fetch(`${API}/estadisticas/por-tipo`);
+    const { data } = await r.json();
+    document.getElementById('tipo-table').innerHTML = buildTable(data, ['tipo','total','monto_total','monto_promedio','fraudulentas'], {
+      tipo: v => `<span class="badge badge-cyan">${v}</span>`,
+      monto_total: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
+      monto_promedio: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
+      fraudulentas: v => `<span class="badge badge-red">${v}</span>`
+    });
+  } catch(e) {}
+}
+
+// ── FRAUDE ───────────────────────────────────────────────
+async function loadFraudeAll() {
+  loadFraudeTransacciones();
+  loadDispCompartido();
+  loadCircular();
+  loadRiesgo();
+}
+
+async function loadFraudeTransacciones() {
+  const r = await fetch(`${API}/fraude/transacciones-sospechosas`);
+  const { data } = await r.json();
+  document.getElementById('fraude-txn-table').innerHTML = buildTable(data,
+    ['id','tipo','monto','fecha','canal','usuario_origen','usuario_destino','pais'],
+    { monto: v => `<span style="color:var(--accent2)">Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}</span>` }
+  );
+}
+async function loadDispCompartido() {
+  const r = await fetch(`${API}/fraude/dispositivo-compartido`);
+  const { data } = await r.json();
+  document.getElementById('disp-compartido-table').innerHTML = buildTable(data,
+    ['ip','tipo','total_usuarios','usuarios'],
+    { total_usuarios: v => `<span class="badge badge-red">${v} usuarios</span>`,
+      usuarios: v => `<div class="chip-list">${(v||[]).map(u=>`<span class="chip">${u}</span>`).join('')}</div>` }
+  );
+}
+async function loadCircular() {
+  const r = await fetch(`${API}/fraude/transferencias-circulares`);
+  const { data } = await r.json();
+  document.getElementById('circular-table').innerHTML = data.length
+    ? buildTable(data, ['cuenta_a','cuenta_b','monto_a_b','monto_b_a','fecha_ida','fecha_vuelta'],
+        { monto_a_b: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
+          monto_b_a: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}` })
+    : '<div class="empty-state">✅ No se detectaron transferencias circulares</div>';
+}
+async function loadRiesgo() {
+  const r = await fetch(`${API}/fraude/usuarios-riesgo`);
+  const { data } = await r.json();
+  document.getElementById('riesgo-table').innerHTML = buildTable(data,
+    ['id','nombre','email','transacciones_fraude','monto_total_fraude'],
+    { transacciones_fraude: v => `<span class="badge badge-red">${v}</span>`,
+      monto_total_fraude: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}` }
+  );
+}
+
+// ── USUARIOS ─────────────────────────────────────────────
+async function loadUsuarios() {
+  const params = new URLSearchParams();
+  const nombre = document.getElementById('f-u-nombre')?.value;
+  const estado = document.getElementById('f-u-estado')?.value;
+  if (nombre) params.append('nombre', nombre);
+  if (estado) params.append('estado', estado);
+  params.append('limit', '30');
+  const r = await fetch(`${API}/usuarios?${params}`);
+  const { data } = await r.json();
+  document.getElementById('usuarios-table').innerHTML = buildTable(data,
+    ['id_usuario','nombre','email','ocupacion','score_credito','estado','num_cuentas','labels'],
+    { estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activo':'Inactivo'}</span>`,
+      labels: v => `<div class="chip-list">${(v||[]).map(l=>`<span class="chip">${l}</span>`).join('')}</div>`,
+      score_credito: v => `<span style="color:${v>700?'var(--accent3)':v>500?'var(--accent4)':'var(--accent2)'}">${v}</span>` }
+  );
+}
+
+async function crearUsuario() {
+  const body = {
+    nombre: document.getElementById('u-nombre').value,
+    email: document.getElementById('u-email').value,
+    fecha_registro: document.getElementById('u-fecha').value,
+    score_credito: document.getElementById('u-score').value,
+    ocupacion: document.getElementById('u-ocupacion').value,
+    telefono: document.getElementById('u-telefono').value,
+    estado: true
+  };
+  if (!body.nombre || !body.email) return toast('Nombre y email son requeridos', 'error');
+  const r = await fetch(`${API}/usuarios`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) { toast(`Usuario creado: ${d.data.nombre}`); loadUsuarios(); }
+  else toast(d.error, 'error');
+}
+
+async function crearUsuarioMultiLabel() {
+  const labels_extra = [...document.querySelectorAll('.u-label-extra:checked')].map(c => c.value);
+  const body = {
+    nombre: document.getElementById('u-nombre').value,
+    email: document.getElementById('u-email').value,
+    fecha_registro: document.getElementById('u-fecha').value,
+    score_credito: document.getElementById('u-score').value,
+    ocupacion: document.getElementById('u-ocupacion').value,
+    telefono: document.getElementById('u-telefono').value,
+    estado: true,
+    labels_extra
+  };
+  if (!body.nombre || !body.email) return toast('Nombre y email son requeridos', 'error');
+  const r = await fetch(`${API}/usuarios/multi-label`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) { toast(`Usuario creado con labels: ${d.data.labels?.join(', ')}`); loadUsuarios(); }
+  else toast(d.error, 'error');
+}
+
+async function actualizarUsuario() {
+  const id = parseInt(document.getElementById('upd-u-id').value);
+  const campo = document.getElementById('upd-u-campo').value;
+  const valor = document.getElementById('upd-u-valor').value;
+  if (!id || !campo || !valor) return toast('Completa todos los campos', 'error');
+  let v = valor;
+  if (valor === 'true') v = true; else if (valor === 'false') v = false;
+  else if (!isNaN(valor)) v = Number(valor);
+  const r = await fetch(`${API}/usuarios/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: v}) });
+  const d = await r.json();
+  if (d.success) { toast('Usuario actualizado ✓'); loadUsuarios(); }
+  else toast(d.error, 'error');
+}
+
+async function eliminarUsuario() {
+  const id = document.getElementById('upd-u-id').value;
+  if (!id) return toast('Ingresa el ID del usuario', 'error');
+  if (!confirm(`¿Eliminar usuario ID ${id}?`)) return;
+  const r = await fetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.success) { toast('Usuario eliminado'); loadUsuarios(); }
+  else toast(d.error, 'error');
+}
+
+// ── CUENTAS ──────────────────────────────────────────────
+async function loadCuentas() {
+  const params = new URLSearchParams();
+  const tipo = document.getElementById('f-c-tipo')?.value;
+  const min = document.getElementById('f-c-min')?.value;
+  const max = document.getElementById('f-c-max')?.value;
+  if (tipo) params.append('tipo', tipo);
+  if (min) params.append('min_saldo', min);
+  if (max) params.append('max_saldo', max);
+  params.append('limit', '30');
+  const r = await fetch(`${API}/cuentas?${params}`);
+  const { data } = await r.json();
+  document.getElementById('cuentas-table').innerHTML = buildTable(data,
+    ['id_cuenta','tipo','saldo','moneda','limite_diario','estado','propietario'],
+    { saldo: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
+      estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activa':'Inactiva'}</span>` }
+  );
+}
+
+async function crearCuenta() {
+  const body = {
+    id_usuario: document.getElementById('c-id-usuario').value,
+    tipo: document.getElementById('c-tipo').value,
+    saldo: document.getElementById('c-saldo').value,
+    moneda: document.getElementById('c-moneda').value,
+    limite_diario: document.getElementById('c-limite').value,
+    fecha_creacion: document.getElementById('c-fecha').value,
+    estado: true
+  };
+  if (!body.id_usuario) return toast('ID de usuario requerido', 'error');
+  const r = await fetch(`${API}/cuentas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) { toast('Cuenta creada ✓'); loadCuentas(); }
+  else toast(d.error, 'error');
+}
+
+async function actualizarCuenta() {
+  const id = document.getElementById('upd-c-id').value;
+  const campo = document.getElementById('upd-c-campo').value;
+  let valor = document.getElementById('upd-c-valor').value;
+  if (!id || !campo || !valor) return toast('Completa todos los campos', 'error');
+  if (valor === 'true') valor = true; else if (valor === 'false') valor = false;
+  else if (!isNaN(valor)) valor = Number(valor);
+  const r = await fetch(`${API}/cuentas/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: valor}) });
+  const d = await r.json();
+  if (d.success) { toast('Cuenta actualizada ✓'); loadCuentas(); }
+  else toast(d.error, 'error');
+}
+
+async function eliminarCuenta() {
+  const id = document.getElementById('upd-c-id').value;
+  if (!id || !confirm(`¿Eliminar cuenta ${id}?`)) return;
+  const r = await fetch(`${API}/cuentas/${id}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.success) { toast('Cuenta eliminada'); loadCuentas(); }
+  else toast(d.error, 'error');
+}
+
+// ── TRANSACCIONES ────────────────────────────────────────
+async function loadTransacciones() {
+  const params = new URLSearchParams();
+  const tipo = document.getElementById('f-t-tipo')?.value;
+  const fraude = document.getElementById('f-t-fraude')?.value;
+  const min = document.getElementById('f-t-min')?.value;
+  if (tipo) params.append('tipo', tipo);
+  if (fraude) params.append('es_fraudulenta', fraude);
+  if (min) params.append('min_monto', min);
+  params.append('limit', '30');
+  const r = await fetch(`${API}/transacciones?${params}`);
+  const { data } = await r.json();
+  document.getElementById('transacciones-table').innerHTML = buildTable(data,
+    ['id_transaccion','tipo','monto','moneda','canal','fecha','es_fraudulenta','cuenta_origen','cuenta_destino'],
+    { monto: v => `<strong>Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}</strong>`,
+      es_fraudulenta: v => `<span class="badge ${v?'badge-red':'badge-green'}">${v?'FRAUDE':'OK'}</span>` }
+  );
+}
+
+async function crearTransaccion() {
+  const body = {
+    monto: document.getElementById('t-monto').value,
+    tipo: document.getElementById('t-tipo').value,
+    canal: document.getElementById('t-canal').value,
+    moneda: document.getElementById('t-moneda').value,
+    id_cuenta_origen: document.getElementById('t-origen').value,
+    id_cuenta_destino: document.getElementById('t-destino').value,
+    id_dispositivo: document.getElementById('t-dispositivo').value || 1,
+    id_ubicacion: document.getElementById('t-ubicacion').value || 1,
+    fecha: document.getElementById('t-fecha').value
+  };
+  if (!body.id_cuenta_origen || !body.id_cuenta_destino || !body.monto) return toast('Origen, destino y monto son requeridos', 'error');
+  const r = await fetch(`${API}/transacciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) { toast('Transacción registrada ✓'); loadTransacciones(); }
+  else toast(d.error, 'error');
+}
+
+async function eliminarTransaccion() {
+  const id = document.getElementById('upd-t-id').value;
+  if (!id || !confirm(`¿Eliminar transacción ${id}?`)) return;
+  const r = await fetch(`${API}/transacciones/${id}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (d.success) { toast('Transacción eliminada'); loadTransacciones(); }
+  else toast(d.error, 'error');
+}
+
+async function marcarFraudulenta() {
+  const id = document.getElementById('upd-t-id').value;
+  if (!id) return toast('Ingresa el ID de la transacción', 'error');
+  const r = await fetch(`${API}/transacciones/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({es_fraudulenta: true}) });
+  const d = await r.json();
+  if (d.success) { toast('Marcada como fraudulenta ⚠️'); loadTransacciones(); }
+  else toast(d.error, 'error');
+}
+
+// ── DISPOSITIVOS ─────────────────────────────────────────
+async function loadDispositivos() {
+  const tipo = document.getElementById('f-d-tipo')?.value;
+  const params = tipo ? `?tipo=${tipo}&limit=30` : '?limit=30';
+  const r = await fetch(`${API}/dispositivos${params}`);
+  const { data } = await r.json();
+  document.getElementById('dispositivos-table').innerHTML = buildTable(data,
+    ['id_dispositivo','tipo','ip','sistema_operativo','marca','ubicacion','verificado'],
+    { verificado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'✓':'✗'}</span>` }
+  );
+}
+
+// ── UBICACIONES ──────────────────────────────────────────
+async function loadUbicaciones() {
+  const r = await fetch(`${API}/ubicaciones`);
+  const { data } = await r.json();
+  document.getElementById('ubicaciones-table').innerHTML = buildTable(data,
+    ['id_ubicacion','pais','ciudad','latitud','longitud']
+  );
+}
+
+// ── RELACIONES ───────────────────────────────────────────
+async function crearRelacion() {
+  let props;
+  try { props = JSON.parse(document.getElementById('r-props').value); }
+  catch { return toast('JSON de propiedades inválido', 'error'); }
+  const body = {
+    tipo_origen: document.getElementById('r-tipo-origen').value,
+    id_origen: document.getElementById('r-id-origen').value,
+    tipo_relacion: document.getElementById('r-tipo-rel').value,
+    tipo_destino: document.getElementById('r-tipo-destino').value,
+    id_destino: document.getElementById('r-id-destino').value,
+    propiedades: props
+  };
+  const r = await fetch(`${API}/relaciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) toast('Relación creada ✓'); else toast(d.error, 'error');
+}
+
+async function actualizarRelacion() {
+  let updates;
+  try { updates = JSON.parse(document.getElementById('r2-updates').value); }
+  catch { return toast('JSON inválido', 'error'); }
+  const body = {
+    tipo_origen: document.getElementById('r2-tipo-origen').value,
+    id_origen: document.getElementById('r2-id-origen').value,
+    tipo_relacion: document.getElementById('r2-tipo-rel').value,
+    tipo_destino: document.getElementById('r2-tipo-destino').value,
+    id_destino: document.getElementById('r2-id-destino').value,
+    updates
+  };
+  const r = await fetch(`${API}/relaciones/update`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) toast('Relación actualizada ✓'); else toast(d.error, 'error');
+}
+
+async function eliminarRelacion() {
+  const body = {
+    tipo_origen: document.getElementById('r2-tipo-origen').value,
+    id_origen: document.getElementById('r2-id-origen').value,
+    tipo_relacion: document.getElementById('r2-tipo-rel').value,
+    tipo_destino: document.getElementById('r2-tipo-destino').value,
+    id_destino: document.getElementById('r2-id-destino').value
+  };
+  const r = await fetch(`${API}/relaciones/delete`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (d.success) toast('Relación eliminada'); else toast(d.error, 'error');
+}
+
+// ── CSV ──────────────────────────────────────────────────
+function previewCSV(input) {
+  const file = input.files[0];
+  if (file) document.getElementById('csv-preview').textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+}
+
+async function cargarCSV() {
+  const fileInput = document.getElementById('csv-file');
+  const tipoNodo = document.getElementById('csv-tipo-nodo').value;
+  if (!fileInput.files[0]) return toast('Selecciona un archivo CSV', 'error');
+  const formData = new FormData();
+  formData.append('archivo', fileInput.files[0]);
+  formData.append('tipo_nodo', tipoNodo);
+  toast('Importando datos...', 'success');
+  const r = await fetch(`${API}/cargar-csv`, { method: 'POST', body: formData });
+  const d = await r.json();
+  if (d.success) toast(d.message); else toast(d.error, 'error');
+}
+
+// ── ESTADÍSTICAS ─────────────────────────────────────────
+async function loadEstadisticasTipo() {
+  const r = await fetch(`${API}/estadisticas/por-tipo`);
+  const { data } = await r.json();
+  const html = `
+    <h3 style="margin-bottom:1rem;font-size:1rem">Transacciones por Tipo (Consulta Agregada)</h3>
+    ${buildTable(data, ['tipo','total','monto_total','monto_promedio','fraudulentas'], {
+      tipo: v => `<span class="badge badge-cyan">${v}</span>`,
+      monto_total: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
+      monto_promedio: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
+      fraudulentas: v => `<span class="badge badge-red">${v}</span>`
+    })}
+    <hr class="sep">
+    <div style="background:var(--surface);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.8rem;color:var(--text-dim)">
+      <div style="color:var(--accent);margin-bottom:.5rem">// Cypher Query ejecutada:</div>
+      MATCH (t:Transaccion)<br>
+      RETURN t.tipo as tipo, count(t) as total,<br>
+      &nbsp;&nbsp;sum(t.monto) as monto_total,<br>
+      &nbsp;&nbsp;avg(t.monto) as monto_promedio,<br>
+      &nbsp;&nbsp;sum(CASE WHEN t.es_fraudulenta THEN 1 ELSE 0 END) as fraudulentas<br>
+      ORDER BY total DESC
+    </div>
+  `;
+  document.getElementById('estadisticas-content').innerHTML = html;
+}
+
+// ── TABLE BUILDER ────────────────────────────────────────
+function buildTable(data, cols, formatters = {}) {
+  if (!data || !data.length) return '<div class="empty-state">Sin resultados</div>';
+  const headers = cols.map(c => `<th>${c.replace(/_/g,' ').toUpperCase()}</th>`).join('');
+  const rows = data.map(row => {
+    const cells = cols.map(c => {
+      const val = row[c];
+      const fmt = formatters[c];
+      const display = fmt ? fmt(val) : (val === null || val === undefined ? '<span style="color:var(--text-dim)">—</span>' : String(val));
+      return `<td>${display}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  return `<table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── INIT ─────────────────────────────────────────────────
+checkHealth();
+loadDashboard();
+</script>
+</body>
+</html>

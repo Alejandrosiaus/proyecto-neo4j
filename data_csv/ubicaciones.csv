@@ -1,0 +1,201 @@
+id_ubicacion,pais,ciudad,latitud,longitud,zonas_riesgo
+1,Ecuador,Quito,-51.823634,-80.989445,zona_2|zona_7
+2,Bolivia,La Paz,30.940835,141.184644,zona_1|zona_10
+3,Brasil,São Paulo,-51.215753,-101.290329,zona_5|zona_10
+4,Guatemala,Villa Nueva,-29.747618,53.958398,zona_5|zona_9
+5,Argentina,Mendoza,19.836742,111.394964,zona_1|zona_7
+6,Bolivia,Sucre,-11.788184,-124.02738,zona_3|zona_6
+7,México,Puebla,-42.71702,125.097972,zona_5|zona_8
+8,Paraguay,Asunción,37.675937,13.042113,zona_4|zona_6
+9,Perú,Cusco,50.334392,42.667111,zona_3|zona_10
+10,Argentina,Buenos Aires,-49.180303,-97.956621,zona_3|zona_6
+11,Uruguay,Salto,55.043426,-43.154559,zona_4|zona_8
+12,Colombia,Cali,-9.880621,61.263063,zona_1|zona_10
+13,Ecuador,Guayaquil,12.835764,-91.868067,zona_4|zona_9
+14,España,Bilbao,-27.108873,-63.258216,zona_1|zona_7
+15,Uruguay,Montevideo,47.240817,-35.580677,zona_1|zona_7
+16,Venezuela,Valencia,-27.996429,-0.276747,zona_4|zona_7
+17,España,Barcelona,-23.678307,22.092528,zona_3|zona_10
+18,Brasil,Fortaleza,-4.276136,-101.044527,zona_2|zona_10
+19,Chile,Santiago,40.984334,129.997047,zona_2|zona_7
+20,Paraguay,Luque,20.743947,-41.483768,zona_5|zona_9
+21,Perú,Cusco,68.326954,129.880693,zona_1|zona_6
+22,Ecuador,Manta,40.361481,96.695544,zona_3|zona_6
+23,España,Sevilla,-34.913965,-178.831686,zona_3|zona_10
+24,Paraguay,Ciudad del Este,9.475573,-141.692104,zona_3|zona_10
+25,Venezuela,Maracaibo,-35.589413,94.503888,zona_5|zona_10
+26,Guatemala,Villa Nueva,-13.832181,-172.988373,zona_3|zona_8
+27,Argentina,Buenos Aires,-24.409308,24.2485,zona_1|zona_6
+28,Bolivia,Sucre,48.634953,172.074418,zona_5|zona_7
+29,Colombia,Barranquilla,65.249782,-120.554295,zona_5|zona_10
+30,Brasil,Rio de Janeiro,62.972014,91.895471,zona_2|zona_8
+31,Brasil,Brasília,0.638711,6.327303,zona_1|zona_7
+32,Argentina,Buenos Aires,-12.063134,31.791139,zona_2|zona_10
+33,Argentina,Buenos Aires,-45.983878,47.197065,zona_2|zona_6
+34,Guatemala,Escuintla,-46.001117,-94.318332,zona_4|zona_7
+35,Perú,Arequipa,36.865776,137.657907,zona_5|zona_9
+36,Argentina,Mendoza,47.552119,-111.452431,zona_1|zona_9
+37,Estados Unidos,Houston,-2.790011,130.981229,zona_1|zona_6
+38,Guatemala,Mixco,37.483126,108.213304,zona_1|zona_7
+39,Argentina,Córdoba,13.108291,-129.534373,zona_2|zona_8
+40,Chile,Valparaíso,56.059716,-152.86144,zona_5|zona_6
+41,Guatemala,Villa Nueva,51.175503,168.838653,zona_2|zona_7
+42,Brasil,Salvador,6.132519,131.274142,zona_1|zona_7
+43,Brasil,São Paulo,70.134223,-84.526899,zona_4|zona_8
+44,Brasil,Fortaleza,29.057657,-4.798292,zona_2|zona_8
+45,Argentina,Buenos Aires,18.555897,15.190272,zona_3|zona_6
+46,Guatemala,Villa Nueva,5.552142,150.979367,zona_5|zona_7
+47,Guatemala,Villa Nueva,-44.825844,-113.103014,zona_5|zona_6
+48,Ecuador,Guayaquil,-3.720505,158.974606,zona_5|zona_7
+49,Venezuela,Mérida,-49.952809,-150.485974,zona_5|zona_10
+50,Perú,Cusco,63.707695,-106.466688,zona_3|zona_7
+51,España,Sevilla,-38.378458,52.380284,zona_4|zona_8
+52,Paraguay,Asunción,-53.816937,43.617332,zona_5|zona_6
+53,México,Cancún,-27.929402,-84.527851,zona_3|zona_6
+54,Argentina,Rosario,-18.806601,-22.253554,zona_5|zona_8
+55,Venezuela,Mérida,-54.006465,114.157489,zona_3|zona_6
+56,Colombia,Cali,-40.340559,-141.467048,zona_5|zona_7
+57,España,Valencia,21.813388,78.340387,zona_2|zona_8
+58,Perú,Trujillo,-23.107601,146.937257,zona_1|zona_6
+59,Ecuador,Santo Domingo,50.327207,-164.128766,zona_3|zona_7
+60,Ecuador,Cuenca,-34.479089,-20.939216,zona_4|zona_10
+61,Guatemala,Guatemala City,-45.44403,137.918302,zona_2|zona_10
+62,Guatemala,Escuintla,18.978715,-126.686237,zona_2|zona_6
+63,España,Valencia,59.170649,106.60403,zona_1|zona_8
+64,Argentina,Córdoba,29.700543,-52.675692,zona_5|zona_9
+65,Venezuela,Maracaibo,62.572005,-94.77456,zona_2|zona_7
+66,Brasil,São Paulo,-32.221196,152.815426,zona_4|zona_7
+67,España,Barcelona,44.996563,-141.085574,zona_1|zona_9
+68,Argentina,Córdoba,48.706499,-14.290836,zona_3|zona_7
+69,Argentina,Buenos Aires,28.824214,-36.552248,zona_3|zona_6
+70,Paraguay,San Lorenzo,-10.404442,3.386043,zona_5|zona_8
+71,Guatemala,Guatemala City,56.383878,-85.962529,zona_5|zona_8
+72,Guatemala,Guatemala City,20.764549,-55.55264,zona_3|zona_9
+73,Venezuela,Mérida,-40.312985,143.821704,zona_2|zona_8
+74,Guatemala,Mixco,-54.785208,153.20706,zona_5|zona_7
+75,Estados Unidos,Houston,-46.113326,59.125567,zona_3|zona_10
+76,Estados Unidos,New York,36.408791,-71.883983,zona_3|zona_9
+77,Estados Unidos,Houston,33.545469,19.588492,zona_2|zona_9
+78,Ecuador,Santo Domingo,31.019379,145.009996,zona_5|zona_10
+79,España,Sevilla,14.588026,-179.853862,zona_3|zona_7
+80,Brasil,Fortaleza,22.046019,-63.990277,zona_4|zona_9
+81,Ecuador,Guayaquil,9.919098,105.744744,zona_2|zona_6
+82,España,Bilbao,29.309437,42.93389,zona_1|zona_7
+83,Ecuador,Cuenca,-26.470635,-108.313224,zona_1|zona_6
+84,Argentina,Mendoza,22.631795,96.656162,zona_4|zona_9
+85,Ecuador,Manta,-30.306725,70.68753,zona_4|zona_9
+86,Argentina,Córdoba,28.319367,-178.003865,zona_1|zona_9
+87,Argentina,Córdoba,47.121952,70.52824,zona_4|zona_6
+88,Perú,Arequipa,61.518692,-136.310904,zona_2|zona_9
+89,Ecuador,Manta,70.462342,34.362835,zona_4|zona_10
+90,Uruguay,Las Piedras,-0.803924,146.467703,zona_4|zona_7
+91,Bolivia,Sucre,2.158859,90.639643,zona_3|zona_10
+92,Chile,Valparaíso,-20.126124,-152.105993,zona_3|zona_7
+93,España,Valencia,-14.396885,14.4548,zona_2|zona_7
+94,Argentina,Mendoza,33.131626,74.310891,zona_1|zona_9
+95,Brasil,Brasília,13.911615,-30.321276,zona_2|zona_9
+96,Brasil,Fortaleza,65.149878,-172.968496,zona_5|zona_9
+97,Chile,Santiago,64.72819,-72.499445,zona_4|zona_9
+98,Perú,Chiclayo,46.583258,143.212085,zona_4|zona_7
+99,España,Sevilla,6.676533,-40.011407,zona_4|zona_7
+100,Uruguay,Paysandú,61.781786,173.059912,zona_5|zona_6
+101,Brasil,Fortaleza,16.677782,-170.243263,zona_4|zona_7
+102,Uruguay,Paysandú,-31.920414,-86.343727,zona_3|zona_7
+103,Chile,Concepción,-12.13743,136.670395,zona_3|zona_9
+104,España,Madrid,4.728968,89.648734,zona_1|zona_8
+105,Argentina,Buenos Aires,44.216597,54.631676,zona_1|zona_7
+106,Argentina,Buenos Aires,23.909628,-94.123821,zona_4|zona_6
+107,Venezuela,Maracaibo,4.059316,-87.752269,zona_3|zona_7
+108,Venezuela,Mérida,67.394313,78.608602,zona_2|zona_8
+109,México,Cancún,-51.73884,-67.695392,zona_4|zona_9
+110,Bolivia,Santa Cruz,-45.348447,68.62119,zona_2|zona_6
+111,Bolivia,Cochabamba,52.987241,36.148181,zona_1|zona_10
+112,Paraguay,Asunción,-10.905122,-25.783915,zona_3|zona_6
+113,Perú,Cusco,-53.393177,-28.778853,zona_4|zona_6
+114,Brasil,Brasília,25.719308,118.334632,zona_2|zona_9
+115,Colombia,Cartagena,67.615164,-82.770337,zona_5|zona_9
+116,Chile,La Serena,49.868294,33.290863,zona_3|zona_7
+117,Uruguay,Montevideo,-19.576112,-17.71128,zona_4|zona_10
+118,Venezuela,Barquisimeto,-12.277629,-2.049659,zona_3|zona_7
+119,Chile,Valparaíso,-9.937229,-86.993133,zona_3|zona_10
+120,Bolivia,Cochabamba,15.585461,5.985811,zona_2|zona_6
+121,Argentina,Mendoza,7.049387,92.939275,zona_4|zona_9
+122,Chile,Santiago,-43.182224,-100.225296,zona_2|zona_8
+123,Ecuador,Manta,-8.134403,19.250264,zona_3|zona_9
+124,Bolivia,Oruro,-12.989505,73.027779,zona_3|zona_8
+125,España,Barcelona,-39.676703,-110.669654,zona_1|zona_10
+126,Paraguay,Ciudad del Este,-30.674296,85.897675,zona_3|zona_10
+127,Paraguay,Capiatá,20.792424,172.983827,zona_2|zona_8
+128,Argentina,Rosario,-32.210924,-174.906588,zona_5|zona_7
+129,España,Madrid,68.735456,19.209228,zona_2|zona_9
+130,México,Ciudad de México,17.906156,-11.0171,zona_4|zona_8
+131,Colombia,Bogotá,-22.935244,130.220267,zona_1|zona_6
+132,Brasil,Salvador,-45.591564,46.600455,zona_1|zona_7
+133,Colombia,Cartagena,65.538957,-149.334873,zona_2|zona_6
+134,Perú,Trujillo,22.002342,104.666699,zona_2|zona_10
+135,Brasil,Salvador,60.380056,-72.952872,zona_5|zona_9
+136,España,Bilbao,23.87047,39.467128,zona_1|zona_7
+137,Ecuador,Guayaquil,-21.389942,-150.772512,zona_2|zona_7
+138,Perú,Lima,-35.120358,-32.933674,zona_5|zona_9
+139,España,Madrid,-25.602518,74.504099,zona_4|zona_6
+140,Ecuador,Guayaquil,62.336703,103.61809,zona_5|zona_7
+141,Brasil,São Paulo,14.159422,53.1485,zona_3|zona_7
+142,México,Ciudad de México,-33.927806,-69.259747,zona_5|zona_8
+143,Chile,Santiago,4.524642,-70.527171,zona_4|zona_8
+144,Perú,Chiclayo,7.711993,-151.040933,zona_1|zona_9
+145,Bolivia,Cochabamba,21.671632,-170.688639,zona_2|zona_10
+146,Venezuela,Caracas,71.945697,62.02137,zona_3|zona_10
+147,Guatemala,Quetzaltenango,4.753605,54.543416,zona_3|zona_7
+148,Venezuela,Barquisimeto,25.617659,-2.978711,zona_1|zona_9
+149,Estados Unidos,Houston,-12.669834,61.248063,zona_2|zona_8
+150,Brasil,Salvador,-18.39634,160.269674,zona_5|zona_6
+151,Chile,Santiago,-15.056321,-63.621437,zona_4|zona_10
+152,Uruguay,Montevideo,28.522869,15.333694,zona_4|zona_6
+153,Argentina,La Plata,-9.054021,92.319535,zona_4|zona_6
+154,Argentina,Rosario,14.750894,153.962194,zona_4|zona_9
+155,México,Ciudad de México,68.589646,39.1938,zona_2|zona_7
+156,España,Bilbao,-53.263343,-33.123353,zona_2|zona_6
+157,Chile,Santiago,27.25913,-124.570395,zona_3|zona_10
+158,Bolivia,Cochabamba,-2.232726,-6.300152,zona_4|zona_7
+159,Chile,Antofagasta,-36.63047,-111.380266,zona_5|zona_10
+160,Bolivia,Santa Cruz,54.731421,-80.550935,zona_4|zona_8
+161,Paraguay,Capiatá,-21.069072,-179.076507,zona_3|zona_10
+162,Venezuela,Barquisimeto,54.888096,-19.242939,zona_4|zona_8
+163,Estados Unidos,Miami,41.88483,-44.20438,zona_3|zona_7
+164,Bolivia,Santa Cruz,17.618301,-95.917519,zona_4|zona_6
+165,Estados Unidos,Houston,34.563941,112.107205,zona_4|zona_7
+166,Chile,Santiago,-38.966724,167.527292,zona_3|zona_6
+167,Uruguay,Paysandú,-42.336614,147.759004,zona_1|zona_7
+168,Brasil,Rio de Janeiro,-45.496812,101.349105,zona_3|zona_8
+169,Venezuela,Barquisimeto,27.529255,126.635505,zona_5|zona_9
+170,Estados Unidos,Houston,55.792643,-167.076324,zona_1|zona_7
+171,Ecuador,Cuenca,71.673092,88.835892,zona_4|zona_6
+172,Paraguay,Asunción,1.347176,69.840419,zona_1|zona_6
+173,Estados Unidos,New York,-17.742292,-45.057208,zona_2|zona_7
+174,Perú,Trujillo,16.872864,105.307011,zona_2|zona_7
+175,México,Cancún,55.596629,43.095733,zona_2|zona_9
+176,Venezuela,Maracaibo,-25.512068,49.645667,zona_4|zona_8
+177,Ecuador,Quito,59.161384,-12.508828,zona_3|zona_10
+178,Colombia,Bogotá,1.099683,-55.596375,zona_5|zona_8
+179,Ecuador,Santo Domingo,32.669816,-15.539107,zona_3|zona_7
+180,Brasil,Salvador,-41.455035,-42.708853,zona_3|zona_10
+181,España,Valencia,-52.213671,118.813522,zona_4|zona_8
+182,Guatemala,Villa Nueva,54.86356,100.192182,zona_1|zona_10
+183,Bolivia,Sucre,50.77054,145.056571,zona_2|zona_10
+184,Paraguay,San Lorenzo,-27.186424,-111.552484,zona_3|zona_7
+185,Ecuador,Quito,59.73227,52.682619,zona_3|zona_9
+186,Guatemala,Villa Nueva,-8.662623,-132.69175,zona_3|zona_8
+187,Bolivia,Sucre,-32.693711,-132.422473,zona_5|zona_8
+188,Perú,Chiclayo,61.012846,118.970143,zona_3|zona_9
+189,Paraguay,San Lorenzo,39.813038,-58.062509,zona_1|zona_9
+190,México,Guadalajara,40.77724,-98.77871,zona_4|zona_10
+191,Estados Unidos,New York,45.41661,-174.989284,zona_5|zona_6
+192,Chile,Concepción,30.449204,62.042687,zona_5|zona_9
+193,Uruguay,Ciudad de la Costa,-41.240045,-95.824115,zona_1|zona_10
+194,Perú,Cusco,61.2375,-100.307808,zona_1|zona_9
+195,Bolivia,Cochabamba,27.45341,-137.996663,zona_1|zona_6
+196,España,Sevilla,-40.252699,-95.471988,zona_5|zona_7
+197,Brasil,Salvador,-7.881538,161.777077,zona_5|zona_9
+198,Venezuela,Maracaibo,57.447551,55.771883,zona_4|zona_10
+199,Brasil,Brasília,-50.845032,-46.609215,zona_4|zona_9
+200,Argentina,Rosario,-42.381963,66.844896,zona_5|zona_8
