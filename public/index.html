@@ -265,6 +265,8 @@
     <a data-view="labels"><span class="icon">🏷️</span> Gestión de Labels</a>
     <a data-view="grafo-integridad"><span class="icon">✓</span> Integridad del Grafo</a>
     <a data-view="relaciones-info"><span class="icon">ℹ️</span> Tipos de Relaciones</a>
+    <a data-view="propiedades-nodos-bulk"><span class="icon">📦</span> Propiedades Bulk (Nodos)</a>
+    <a data-view="propiedades-relaciones-bulk"><span class="icon">🔗</span> Propiedades Bulk (Relaciones)</a>
   </nav>
 
   <main>
@@ -942,6 +944,157 @@
       </div>
     </div>
 
+    <!-- ══ GESTIÓN BULK DE PROPIEDADES EN NODOS ══ -->
+    <div id="v-propiedades-nodos-bulk" class="view">
+      <h1>Gestión de Propiedades - Operaciones Bulk (Nodos)</h1>
+      <p class="subtitle">// Agregar o eliminar propiedades a múltiples nodos simultáneamente</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Agregar Propiedades a Múltiples Nodos</div>
+          <span class="panel-tag">BULK</span>
+        </div>
+        <div class="form-group">
+          <select id="bulk-prop-tipo" class="input">
+            <option value="">Seleccionar tipo de nodo</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Cuenta">Cuenta</option>
+            <option value="Transaccion">Transacción</option>
+            <option value="Dispositivo">Dispositivo</option>
+            <option value="Ubicacion">Ubicación</option>
+          </select>
+          <textarea id="bulk-prop-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
+          <textarea id="bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="3"></textarea>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiples()">➕ Agregar a Múltiples</button>
+          <div id="bulk-prop-resultado" class="empty-state"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Eliminar Propiedades de Múltiples Nodos</div>
+          <span class="panel-tag">BULK DELETE</span>
+        </div>
+        <div class="form-group">
+          <select id="bulk-del-tipo" class="input">
+            <option value="">Seleccionar tipo de nodo</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Cuenta">Cuenta</option>
+            <option value="Transaccion">Transacción</option>
+            <option value="Dispositivo">Dispositivo</option>
+            <option value="Ubicacion">Ubicación</option>
+          </select>
+          <textarea id="bulk-del-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
+          <textarea id="bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas): prop1,prop2" class="input" rows="2"></textarea>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiples()">🗑️ Eliminar de Múltiples</button>
+          <div id="bulk-del-resultado" class="empty-state"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GESTIÓN BULK DE PROPIEDADES EN RELACIONES ══ -->
+    <div id="v-propiedades-relaciones-bulk" class="view">
+      <h1>Gestión de Propiedades - Relaciones</h1>
+      <p class="subtitle">// Agregar o eliminar propiedades en una o múltiples relaciones</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Agregar Propiedad a Una Relación</div>
+          <span class="panel-tag">UPDATE</span>
+        </div>
+        <div class="form-group">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Origen</label>
+              <select id="rel-prop-tipo-origen" class="input">
+                <option value="">Tipo</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Cuenta">Cuenta</option>
+              </select>
+              <input type="number" id="rel-prop-id-origen" placeholder="ID Origen" class="input">
+            </div>
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Destino</label>
+              <select id="rel-prop-tipo-destino" class="input">
+                <option value="">Tipo</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Cuenta">Cuenta</option>
+              </select>
+              <input type="number" id="rel-prop-id-destino" placeholder="ID Destino" class="input">
+            </div>
+          </div>
+          <input type="text" id="rel-prop-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
+          <input type="text" id="rel-prop-nombre" placeholder="Nombre de la propiedad" class="input">
+          <input type="text" id="rel-prop-valor" placeholder="Valor (número o texto)" class="input">
+          <button class="btn btn-primary" onclick="agregarPropiedadRelacion()">➕ Agregar</button>
+          <div id="rel-prop-resultado" class="empty-state"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Eliminar Propiedad de Una Relación</div>
+          <span class="panel-tag">DELETE</span>
+        </div>
+        <div class="form-group">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Origen</label>
+              <select id="rel-del-tipo-origen" class="input">
+                <option value="">Tipo</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Cuenta">Cuenta</option>
+              </select>
+              <input type="number" id="rel-del-id-origen" placeholder="ID Origen" class="input">
+            </div>
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Destino</label>
+              <select id="rel-del-tipo-destino" class="input">
+                <option value="">Tipo</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Cuenta">Cuenta</option>
+              </select>
+              <input type="number" id="rel-del-id-destino" placeholder="ID Destino" class="input">
+            </div>
+          </div>
+          <input type="text" id="rel-del-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
+          <textarea id="rel-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
+          <button class="btn btn-danger" onclick="eliminarPropiedadRelacion()">🗑️ Eliminar</button>
+          <div id="rel-del-resultado" class="empty-state"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Agregar Propiedades a Múltiples Relaciones (Bulk)</div>
+          <span class="panel-tag">BULK</span>
+        </div>
+        <div class="form-group">
+          <input type="text" id="rel-bulk-prop-tipo" placeholder="Tipo de Relación (ej: TIENE)" class="input">
+          <input type="text" id="rel-bulk-prop-campo" placeholder="Campo de filtro (ej: activo)" class="input">
+          <input type="text" id="rel-bulk-prop-valor" placeholder="Valor del filtro (ej: true)" class="input">
+          <textarea id="rel-bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="2"></textarea>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiplesRelaciones()">➕ Agregar a Múltiples</button>
+          <div id="rel-bulk-prop-resultado" class="empty-state"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Eliminar Propiedades de Múltiples Relaciones (Bulk)</div>
+          <span class="panel-tag">BULK DELETE</span>
+        </div>
+        <div class="form-group">
+          <input type="text" id="rel-bulk-del-tipo" placeholder="Tipo de Relación (ej: TIENE)" class="input">
+          <input type="text" id="rel-bulk-del-campo" placeholder="Campo de filtro (ej: activo)" class="input">
+          <input type="text" id="rel-bulk-del-valor" placeholder="Valor del filtro (ej: false)" class="input">
+          <textarea id="rel-bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiplesRelaciones()">🗑️ Eliminar de Múltiples</button>
+          <div id="rel-bulk-del-resultado" class="empty-state"></div>
+        </div>
+      </div>
+    </div>
+
 </div>
 
 <div id="toast"></div>
@@ -1549,6 +1702,249 @@ async function cargarTiposRelaciones() {
       showToast('Tipos de relaciones cargados', 'success');
     } else {
       showToast(result.error || 'Error al cargar', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── GESTIÓN BULK DE PROPIEDADES EN NODOS ────────────────
+async function agregarPropiedadesMultiples() {
+  const tipo = document.getElementById('bulk-prop-tipo').value;
+  const idsStr = document.getElementById('bulk-prop-ids').value;
+  const propsStr = document.getElementById('bulk-prop-props').value;
+
+  if (!tipo || !idsStr || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const ids = idsStr.split(',').map(id => parseInt(id.trim()));
+  const propiedades = {};
+  propsStr.split(',').forEach(prop => {
+    const [key, val] = prop.split(':').map(s => s.trim());
+    propiedades[key] = isNaN(val) ? val : parseFloat(val);
+  });
+
+  try {
+    const r = await fetch(`${API}/nodos/bulk/propiedades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, ids, propiedades })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast(`${result.updated} nodos actualizados`, 'success');
+      document.getElementById('bulk-prop-resultado').innerHTML = `
+        <div style="background:rgba(46,213,115,0.1);border:1px solid var(--accent3);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ ${result.updated} propiedades agregadas</div>
+        </div>
+      `;
+      document.getElementById('bulk-prop-ids').value = '';
+      document.getElementById('bulk-prop-props').value = '';
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function eliminarPropiedadesMultiples() {
+  const tipo = document.getElementById('bulk-del-tipo').value;
+  const idsStr = document.getElementById('bulk-del-ids').value;
+  const propsStr = document.getElementById('bulk-del-props').value;
+
+  if (!tipo || !idsStr || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const ids = idsStr.split(',').map(id => parseInt(id.trim()));
+  const propiedades = propsStr.split(',').map(p => p.trim());
+
+  try {
+    const r = await fetch(`${API}/nodos/bulk/propiedades`, {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo, ids, propiedades })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast(`${result.updated} nodos actualizados`, 'success');
+      document.getElementById('bulk-del-resultado').innerHTML = `
+        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas de ${result.updated} nodos</div>
+        </div>
+      `;
+      document.getElementById('bulk-del-ids').value = '';
+      document.getElementById('bulk-del-props').value = '';
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── GESTIÓN DE PROPIEDADES EN RELACIONES ────────────────
+async function agregarPropiedadRelacion() {
+  const tipoOrigen = document.getElementById('rel-prop-tipo-origen').value;
+  const idOrigen = document.getElementById('rel-prop-id-origen').value;
+  const tipoDestino = document.getElementById('rel-prop-tipo-destino').value;
+  const idDestino = document.getElementById('rel-prop-id-destino').value;
+  const tipoRelacion = document.getElementById('rel-prop-tipo-rel').value;
+  const propNombre = document.getElementById('rel-prop-nombre').value;
+  const propValor = document.getElementById('rel-prop-valor').value;
+
+  if (!tipoOrigen || !idOrigen || !tipoDestino || !idDestino || !tipoRelacion || !propNombre || !propValor) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  try {
+    const body = JSON.parse(propValor);
+    const propiedades = { [propNombre]: body };
+    const r = await fetch(`${API}/relaciones/123/propiedades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo_origen: tipoOrigen, id_origen: parseInt(idOrigen),
+        tipo_destino: tipoDestino, id_destino: parseInt(idDestino),
+        tipo_relacion: tipoRelacion, propiedades
+      })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast('Propiedad agregada a relación', 'success');
+      document.getElementById('rel-prop-resultado').innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ Relación actualizada</div>
+          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function eliminarPropiedadRelacion() {
+  const tipoOrigen = document.getElementById('rel-del-tipo-origen').value;
+  const idOrigen = document.getElementById('rel-del-id-origen').value;
+  const tipoDestino = document.getElementById('rel-del-tipo-destino').value;
+  const idDestino = document.getElementById('rel-del-id-destino').value;
+  const tipoRelacion = document.getElementById('rel-del-tipo-rel').value;
+  const propsStr = document.getElementById('rel-del-props').value;
+
+  if (!tipoOrigen || !idOrigen || !tipoDestino || !idDestino || !tipoRelacion || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const propiedades = propsStr.split(',').map(p => p.trim());
+
+  try {
+    const r = await fetch(`${API}/relaciones/123/propiedades`, {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo_origen: tipoOrigen, id_origen: parseInt(idOrigen),
+        tipo_destino: tipoDestino, id_destino: parseInt(idDestino),
+        tipo_relacion: tipoRelacion, propiedades
+      })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast(`${propiedades.length} propiedades eliminadas`, 'success');
+      document.getElementById('rel-del-resultado').innerHTML = `
+        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas</div>
+        </div>
+      `;
+      document.getElementById('rel-del-props').value = '';
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function agregarPropiedadesMultiplesRelaciones() {
+  const tipoRelacion = document.getElementById('rel-bulk-prop-tipo').value;
+  const campoFiltro = document.getElementById('rel-bulk-prop-campo').value;
+  const valorFiltro = document.getElementById('rel-bulk-prop-valor').value;
+  const propsStr = document.getElementById('rel-bulk-prop-props').value;
+
+  if (!tipoRelacion || !campoFiltro || !valorFiltro || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const propiedades = {};
+  propsStr.split(',').forEach(prop => {
+    const [key, val] = prop.split(':').map(s => s.trim());
+    propiedades[key] = isNaN(val) ? val : parseFloat(val);
+  });
+
+  try {
+    const r = await fetch(`${API}/relaciones/bulk/propiedades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo_relacion: tipoRelacion,
+        filtro: { campo: campoFiltro, valor: valorFiltro },
+        propiedades
+      })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast(`${result.updated} relaciones actualizadas`, 'success');
+      document.getElementById('rel-bulk-prop-resultado').innerHTML = `
+        <div style="background:rgba(46,213,115,0.1);border:1px solid var(--accent3);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ ${result.updated} relaciones actualizadas</div>
+        </div>
+      `;
+    } else {
+      showToast(result.error, 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function eliminarPropiedadesMultiplesRelaciones() {
+  const tipoRelacion = document.getElementById('rel-bulk-del-tipo').value;
+  const campoFiltro = document.getElementById('rel-bulk-del-campo').value;
+  const valorFiltro = document.getElementById('rel-bulk-del-valor').value;
+  const propsStr = document.getElementById('rel-bulk-del-props').value;
+
+  if (!tipoRelacion || !campoFiltro || !valorFiltro || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const propiedades = propsStr.split(',').map(p => p.trim());
+
+  try {
+    const r = await fetch(`${API}/relaciones/bulk/propiedades`, {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo_relacion: tipoRelacion,
+        filtro: { campo: campoFiltro, valor: valorFiltro },
+        propiedades
+      })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast(`${result.updated} relaciones actualizadas`, 'success');
+      document.getElementById('rel-bulk-del-resultado').innerHTML = `
+        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas de ${result.updated} relaciones</div>
+        </div>
+      `;
+    } else {
+      showToast(result.error, 'error');
     }
   } catch (err) {
     showToast(err.message, 'error');

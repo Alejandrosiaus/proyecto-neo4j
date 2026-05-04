@@ -215,6 +215,38 @@ app.delete('/api/nodos/:tipo/:id/propiedades', async (req, res) => {
   } finally { session.close(); }
 });
 
+// POST agregar propiedades a múltiples nodos
+app.post('/api/nodos/bulk/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo, ids, propiedades } = req.body;
+    const setClause = Object.keys(propiedades).map(k => `n.${k} = $${k}`).join(', ');
+    const result = await session.run(
+      `MATCH (n:${tipo}) WHERE n.id_${tipo.toLowerCase()} IN $ids SET ${setClause} RETURN count(n) as updated`,
+      { ids: ids.map(id => parseInt(id)), ...propiedades }
+    );
+    res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// DELETE eliminar propiedades de múltiples nodos
+app.delete('/api/nodos/bulk/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo, ids, propiedades } = req.body;
+    const removeClause = propiedades.map(p => `n.${p}`).join(', ');
+    const result = await session.run(
+      `MATCH (n:${tipo}) WHERE n.id_${tipo.toLowerCase()} IN $ids REMOVE ${removeClause} RETURN count(n) as updated`,
+      { ids: ids.map(id => parseInt(id)) }
+    );
+    res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
 // POST agregar labels a un nodo existente
 app.post('/api/nodos/:tipo/:id/labels', async (req, res) => {
   const session = getSession();
@@ -572,6 +604,74 @@ app.delete('/api/relaciones/bulk/delete', async (req, res) => {
       { valor: filtro.valor }
     );
     res.json({ success: true, deleted: result.records[0].get('deleted').toNumber() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// POST agregar propiedades a una relación específica
+app.post('/api/relaciones/:id/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo_origen, id_origen, tipo_destino, id_destino, tipo_relacion, propiedades } = req.body;
+    const setClause = Object.keys(propiedades).map(k => `r.${k} = $${k}`).join(', ');
+    const result = await session.run(
+      `MATCH (a:${tipo_origen} {id_${tipo_origen.toLowerCase()}: $id_origen})-[r:${tipo_relacion}]->(b:${tipo_destino} {id_${tipo_destino.toLowerCase()}: $id_destino})
+       SET ${setClause} RETURN r, type(r) as tipo`,
+      { id_origen: parseInt(id_origen), id_destino: parseInt(id_destino), ...propiedades }
+    );
+    if (!result.records.length) return res.status(404).json({ success: false, error: 'Relación no encontrada' });
+    res.json({ success: true, data: result.records[0].get('r').properties });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// DELETE eliminar propiedades de una relación específica
+app.delete('/api/relaciones/:id/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo_origen, id_origen, tipo_destino, id_destino, tipo_relacion, propiedades } = req.body;
+    const removeClause = propiedades.map(p => `r.${p}`).join(', ');
+    const result = await session.run(
+      `MATCH (a:${tipo_origen} {id_${tipo_origen.toLowerCase()}: $id_origen})-[r:${tipo_relacion}]->(b:${tipo_destino} {id_${tipo_destino.toLowerCase()}: $id_destino})
+       REMOVE ${removeClause} RETURN r, type(r) as tipo`,
+      { id_origen: parseInt(id_origen), id_destino: parseInt(id_destino) }
+    );
+    if (!result.records.length) return res.status(404).json({ success: false, error: 'Relación no encontrada' });
+    res.json({ success: true, data: result.records[0].get('r').properties });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// POST agregar propiedades a múltiples relaciones
+app.post('/api/relaciones/bulk/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo_relacion, filtro, propiedades } = req.body;
+    const setClause = Object.keys(propiedades).map(k => `r.${k} = $${k}`).join(', ');
+    const result = await session.run(
+      `MATCH ()-[r:${tipo_relacion}]->() WHERE r.${filtro.campo} = $filtro_valor SET ${setClause} RETURN count(r) as updated`,
+      { filtro_valor: filtro.valor, ...propiedades }
+    );
+    res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// DELETE eliminar propiedades de múltiples relaciones
+app.delete('/api/relaciones/bulk/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo_relacion, filtro, propiedades } = req.body;
+    const removeClause = propiedades.map(p => `r.${p}`).join(', ');
+    const result = await session.run(
+      `MATCH ()-[r:${tipo_relacion}]->() WHERE r.${filtro.campo} = $filtro_valor REMOVE ${removeClause} RETURN count(r) as updated`,
+      { filtro_valor: filtro.valor }
+    );
+    res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
