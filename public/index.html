@@ -259,6 +259,12 @@
     <a data-view="relaciones"><span class="icon">🔗</span> Relaciones</a>
     <a data-view="cargar-csv"><span class="icon">📂</span> Cargar CSV</a>
     <a data-view="estadisticas"><span class="icon">📈</span> Estadísticas</a>
+
+    <div class="section-label">Gestión Avanzada</div>
+    <a data-view="propiedades-nodos"><span class="icon">⚙️</span> Gestión de Propiedades</a>
+    <a data-view="labels"><span class="icon">🏷️</span> Gestión de Labels</a>
+    <a data-view="grafo-integridad"><span class="icon">✓</span> Integridad del Grafo</a>
+    <a data-view="relaciones-info"><span class="icon">ℹ️</span> Tipos de Relaciones</a>
   </nav>
 
   <main>
@@ -787,7 +793,155 @@
         </div>
       </div>
     </div>
-  </main>
+
+    <!-- ══ GESTIÓN DE PROPIEDADES DE NODOS ══ -->
+    <div id="v-propiedades-nodos" class="view">
+      <h1>Gestión de Propiedades en Nodos</h1>
+      <p class="subtitle">// Agregar o eliminar propiedades a nodos existentes</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Agregar Propiedades</div>
+          <span class="panel-tag">WRITE</span>
+        </div>
+        <div class="form-group">
+          <select id="prop-tipo" class="input">
+            <option value="">Seleccionar tipo de nodo</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Cuenta">Cuenta</option>
+            <option value="Transaccion">Transacción</option>
+            <option value="Dispositivo">Dispositivo</option>
+            <option value="Ubicacion">Ubicación</option>
+          </select>
+          <input type="number" id="prop-id" placeholder="ID del nodo" class="input">
+          <input type="text" id="prop-nombre" placeholder="Nombre de propiedad" class="input">
+          <input type="text" id="prop-valor" placeholder="Valor" class="input">
+          <button class="btn btn-primary" onclick="agregarPropiedad()">➕ Agregar</button>
+          <div id="prop-resultado" class="empty-state"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Eliminar Propiedades</div>
+          <span class="panel-tag">DELETE</span>
+        </div>
+        <div class="form-group">
+          <select id="prop-del-tipo" class="input">
+            <option value="">Seleccionar tipo de nodo</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Cuenta">Cuenta</option>
+            <option value="Transaccion">Transacción</option>
+            <option value="Dispositivo">Dispositivo</option>
+            <option value="Ubicacion">Ubicación</option>
+          </select>
+          <input type="number" id="prop-del-id" placeholder="ID del nodo" class="input">
+          <textarea id="prop-del-props" placeholder="Propiedades (separadas por comas): prop1,prop2" class="input" rows="3"></textarea>
+          <button class="btn btn-danger" onclick="eliminarPropiedades()">🗑️ Eliminar</button>
+          <div id="prop-del-resultado" class="empty-state"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GESTIÓN DE LABELS ══ -->
+    <div id="v-labels" class="view">
+      <h1>Gestión de Labels en Nodos</h1>
+      <p class="subtitle">// Agregar labels adicionales a nodos existentes</p>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Agregar Labels</div>
+          <span class="panel-tag">UPDATE</span>
+        </div>
+        <div class="form-group">
+          <select id="label-tipo" class="input">
+            <option value="">Seleccionar tipo de nodo</option>
+            <option value="Usuario">Usuario</option>
+            <option value="Cuenta">Cuenta</option>
+            <option value="Transaccion">Transacción</option>
+            <option value="Dispositivo">Dispositivo</option>
+            <option value="Ubicacion">Ubicación</option>
+          </select>
+          <input type="number" id="label-id" placeholder="ID del nodo" class="input">
+          <input type="text" id="label-nombres" placeholder="Labels a agregar (separados por comas): ClienteVIP,Sospechoso" class="input">
+          <button class="btn btn-primary" onclick="agregarLabels()">🏷️ Agregar Labels</button>
+          <div id="label-resultado" class="empty-state"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INTEGRIDAD DEL GRAFO ══ -->
+    <div id="v-grafo-integridad" class="view">
+      <h1>Verificación de Integridad del Grafo</h1>
+      <p class="subtitle">// Validar que el grafo es conexo (todos los nodos conectados)</p>
+
+      <div class="panel">
+        <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
+          <button class="btn btn-primary" onclick="verificarGrafoConexo()">🔍 Verificar Conexidad</button>
+        </div>
+        <div id="grafo-resultado" class="empty-state">Haz clic en Verificar Conexidad</div>
+      </div>
+
+      <div class="stats-grid" id="grafo-stats" style="display:none;">
+        <div class="stat">
+          <div class="stat-value" id="total-nodos-valor">-</div>
+          <div class="stat-label">Total de Nodos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="nodos-conectados-valor">-</div>
+          <div class="stat-label">Nodos Conectados</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="porcentaje-conexo-valor">-</div>
+          <div class="stat-label">% Conectado</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="es-conexo-valor" style="color:var(--accent3);">-</div>
+          <div class="stat-label">Es Conexo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INFORMACIÓN DE RELACIONES ══ -->
+    <div id="v-relaciones-info" class="view">
+      <h1>Información de Tipos de Relaciones</h1>
+      <p class="subtitle">// Tipos de relaciones disponibles en el grafo</p>
+
+      <div class="panel">
+        <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
+          <button class="btn btn-primary" onclick="cargarTiposRelaciones()">🔗 Cargar Tipos</button>
+        </div>
+        <div id="relaciones-tipos-content">
+          <div class="empty-state">Haz clic en Cargar Tipos</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Descripción de Tipos de Relaciones</div>
+          <span class="panel-tag">INFO</span>
+        </div>
+        <table class="table" id="relaciones-descripcion">
+          <tr style="background:var(--card);font-weight:600;">
+            <td>Tipo</td>
+            <td>De</td>
+            <td>A</td>
+            <td>Propiedades</td>
+          </tr>
+          <tr><td>TIENE</td><td>Usuario</td><td>Cuenta</td><td>fecha_asociacion, tipo_relacion, activo</td></tr>
+          <tr><td>USA</td><td>Usuario</td><td>Dispositivo</td><td>fecha_uso, frecuencia, activo</td></tr>
+          <tr><td>REGISTRADO_EN</td><td>Usuario</td><td>Ubicacion</td><td>fecha, tipo, verificado</td></tr>
+          <tr><td>UBICADO_EN</td><td>Dispositivo</td><td>Ubicacion</td><td>fecha, precision, verificado</td></tr>
+          <tr><td>SOSPECHA_DE</td><td>Usuario</td><td>Usuario</td><td>fecha_investigacion, nivel_riesgo, razon, investigador</td></tr>
+          <tr><td>VINCULADO_CON</td><td>Cuenta</td><td>Cuenta</td><td>fecha_vinculo, tipo_vinculo, confianza</td></tr>
+          <tr><td>REALIZA</td><td>Usuario</td><td>Transaccion</td><td>autorizacion, metodo_autorizacion, timestamp</td></tr>
+          <tr><td>INTENTA_DESDE</td><td>Usuario</td><td>Dispositivo</td><td>fecha_intento, resultado, cantidad_intentos, razon_fallo</td></tr>
+          <tr><td>REPORTA_A</td><td>Usuario</td><td>Usuario</td><td>fecha_reporte, tipo_reporte, estado, comentarios</td></tr>
+          <tr><td>PERTENECE_A</td><td>Cuenta</td><td>Usuario</td><td>fecha, principal, estado</td></tr>
+        </table>
+      </div>
+    </div>
+
 </div>
 
 <div id="toast"></div>
@@ -1228,6 +1382,177 @@ function buildTable(data, cols, formatters = {}) {
     return `<tr>${cells}</tr>`;
   }).join('');
   return `<table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── GESTIÓN DE PROPIEDADES ──────────────────────────────
+async function agregarPropiedad() {
+  const tipo = document.getElementById('prop-tipo').value;
+  const id = document.getElementById('prop-id').value;
+  const nombre = document.getElementById('prop-nombre').value;
+  const valor = document.getElementById('prop-valor').value;
+
+  if (!tipo || !id || !nombre || !valor) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  try {
+    const body = { [nombre]: isNaN(valor) ? valor : parseFloat(valor) };
+    const r = await fetch(`${API}/nodos/${tipo}/${id}/propiedades`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast('Propiedad agregada exitosamente', 'success');
+      document.getElementById('prop-resultado').innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ Propiedad agregada</div>
+          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('prop-nombre').value = '';
+      document.getElementById('prop-valor').value = '';
+    } else {
+      showToast(result.error || 'Error al agregar propiedad', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function eliminarPropiedades() {
+  const tipo = document.getElementById('prop-del-tipo').value;
+  const id = document.getElementById('prop-del-id').value;
+  const propsStr = document.getElementById('prop-del-props').value;
+
+  if (!tipo || !id || !propsStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const propiedades = propsStr.split(',').map(p => p.trim());
+
+  try {
+    const r = await fetch(`${API}/nodos/${tipo}/${id}/propiedades`, {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ propiedades })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast('Propiedades eliminadas exitosamente', 'success');
+      document.getElementById('prop-del-resultado').innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ ${propiedades.length} propiedad(es) eliminada(s)</div>
+          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('prop-del-props').value = '';
+    } else {
+      showToast(result.error || 'Error al eliminar propiedades', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── GESTIÓN DE LABELS ───────────────────────────────────
+async function agregarLabels() {
+  const tipo = document.getElementById('label-tipo').value;
+  const id = document.getElementById('label-id').value;
+  const nombresStr = document.getElementById('label-nombres').value;
+
+  if (!tipo || !id || !nombresStr) {
+    showToast('Por favor completa todos los campos', 'error');
+    return;
+  }
+
+  const labels = nombresStr.split(',').map(l => l.trim());
+
+  try {
+    const r = await fetch(`${API}/nodos/${tipo}/${id}/labels`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ labels })
+    });
+    const result = await r.json();
+    if (result.success) {
+      showToast('Labels agregados exitosamente', 'success');
+      document.getElementById('label-resultado').innerHTML = `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
+          <div style="color:var(--accent3);font-weight:600">✓ Labels actualizados</div>
+          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
+            <div><span style="color:var(--text-dim)">Labels:</span> ${result.data.labels.join(', ')}</div>
+          </div>
+        </div>
+      `;
+      document.getElementById('label-nombres').value = '';
+    } else {
+      showToast(result.error || 'Error al agregar labels', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── INTEGRIDAD DEL GRAFO ────────────────────────────────
+async function verificarGrafoConexo() {
+  try {
+    const r = await fetch(`${API}/grafo/conexo`);
+    const result = await r.json();
+    if (result.success) {
+      const datos = result.data;
+      document.getElementById('grafo-stats').style.display = 'grid';
+      document.getElementById('total-nodos-valor').textContent = datos.total_nodos;
+      document.getElementById('nodos-conectados-valor').textContent = datos.nodos_conectados;
+      document.getElementById('porcentaje-conexo-valor').textContent = datos.porcentaje_conectado;
+      document.getElementById('es-conexo-valor').textContent = datos.es_conexo ? '✓ SÍ' : '✗ NO';
+      document.getElementById('es-conexo-valor').style.color = datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)';
+
+      document.getElementById('grafo-resultado').innerHTML = `
+        <div style="background:${datos.es_conexo ? 'rgba(46,213,115,0.1)' : 'rgba(255,71,87,0.1)'};border:1px solid ${datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)'};border-radius:8px;padding:1rem">
+          <div style="font-weight:600;color:${datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)'}">
+            ${datos.es_conexo ? '✓ El grafo es CONEXO' : '✗ El grafo NO es conexo'}
+          </div>
+          <div style="font-size:.9rem;margin-top:.5rem;color:var(--text-dim)">
+            ${datos.nodos_conectados} de ${datos.total_nodos} nodos conectados (${datos.porcentaje_conectado})
+          </div>
+        </div>
+      `;
+      showToast(datos.es_conexo ? 'Grafo verificado exitosamente' : 'Existen nodos desconectados', datos.es_conexo ? 'success' : 'warning');
+    } else {
+      showToast(result.error || 'Error al verificar', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// ── TIPOS DE RELACIONES ─────────────────────────────────
+async function cargarTiposRelaciones() {
+  try {
+    const r = await fetch(`${API}/relaciones/tipos`);
+    const result = await r.json();
+    if (result.success) {
+      const data = result.data;
+      const html = `
+        <h3 style="margin-bottom:1rem;font-size:1rem">Tipos de Relaciones en el Grafo</h3>
+        ${buildTable(data, ['tipo','cantidad'], {
+          tipo: v => `<span class="badge badge-cyan">${v}</span>`,
+          cantidad: v => `<span style="font-weight:600">${v}</span>`
+        })}
+        <div style="margin-top:1rem;padding:1rem;background:var(--surface);border-radius:8px;font-size:.85rem;color:var(--text-dim)">
+          Total de tipos de relaciones: <span style="color:var(--accent)">${data.length}</span>
+        </div>
+      `;
+      document.getElementById('relaciones-tipos-content').innerHTML = html;
+      showToast('Tipos de relaciones cargados', 'success');
+    } else {
+      showToast(result.error || 'Error al cargar', 'error');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────────

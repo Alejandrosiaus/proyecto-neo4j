@@ -179,6 +179,60 @@ app.put('/api/usuarios/:id', async (req, res) => {
   } finally { session.close(); }
 });
 
+// POST agregar propiedades a un nodo existente
+app.post('/api/nodos/:tipo/:id/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo, id } = req.params;
+    const propiedades = req.body; // {prop1: valor1, prop2: valor2, ...}
+    const propsStr = Object.keys(propiedades).map(k => `n.${k} = $${k}`).join(', ');
+    const result = await session.run(
+      `MATCH (n:${tipo} {id_${tipo.toLowerCase()}: $id}) SET ${propsStr} RETURN n, labels(n) as labels`,
+      { id: parseInt(id), ...propiedades }
+    );
+    if (!result.records.length) return res.status(404).json({ success: false, error: 'Nodo no encontrado' });
+    res.json({ success: true, data: { ...result.records[0].get('n').properties, labels: result.records[0].get('labels') } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// DELETE eliminar propiedades de un nodo
+app.delete('/api/nodos/:tipo/:id/propiedades', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo, id } = req.params;
+    const { propiedades } = req.body; // ["prop1", "prop2", ...]
+    const removeClause = propiedades.map(p => `n.${p}`).join(', ');
+    const result = await session.run(
+      `MATCH (n:${tipo} {id_${tipo.toLowerCase()}: $id}) REMOVE ${removeClause} RETURN n, labels(n) as labels`,
+      { id: parseInt(id) }
+    );
+    if (!result.records.length) return res.status(404).json({ success: false, error: 'Nodo no encontrado' });
+    res.json({ success: true, data: { ...result.records[0].get('n').properties, labels: result.records[0].get('labels') } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// POST agregar labels a un nodo existente
+app.post('/api/nodos/:tipo/:id/labels', async (req, res) => {
+  const session = getSession();
+  try {
+    const { tipo, id } = req.params;
+    const { labels: newLabels } = req.body; // ["ClienteVIP", "Sospechoso", ...]
+    const labelStr = newLabels.map(l => `:${l}`).join('');
+    const result = await session.run(
+      `MATCH (n:${tipo} {id_${tipo.toLowerCase()}: $id}) SET n${labelStr} RETURN labels(n) as all_labels, n`,
+      { id: parseInt(id) }
+    );
+    if (!result.records.length) return res.status(404).json({ success: false, error: 'Nodo no encontrado' });
+    res.json({ success: true, data: { labels: result.records[0].get('all_labels'), properties: result.records[0].get('n').properties } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
 // PUT actualizar múltiples usuarios al mismo tiempo
 app.put('/api/usuarios/bulk/update', async (req, res) => {
   const session = getSession();
@@ -518,6 +572,56 @@ app.delete('/api/relaciones/bulk/delete', async (req, res) => {
       { valor: filtro.valor }
     );
     res.json({ success: true, deleted: result.records[0].get('deleted').toNumber() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// ════════════════════════════════════════════════════════════
+//  VERIFICACIÓN DE INTEGRIDAD DEL GRAFO
+// ════════════════════════════════════════════════════════════
+
+// GET verificar si el grafo es conexo
+app.get('/api/grafo/conexo', async (req, res) => {
+  const session = getSession();
+  try {
+    const result = await session.run(`
+      MATCH (n)
+      WITH count(DISTINCT n) as total_nodos
+      MATCH (n)-[*]-(m)
+      RETURN count(DISTINCT n) as nodos_conectados, total_nodos,
+             case when count(DISTINCT n) = total_nodos then true else false end as es_conexo
+      LIMIT 1
+    `);
+    const r = result.records[0];
+    res.json({
+      success: true,
+      data: {
+        total_nodos: r.get('total_nodos').toNumber(),
+        nodos_conectados: r.get('nodos_conectados').toNumber(),
+        es_conexo: r.get('es_conexo'),
+        porcentaje_conectado: ((r.get('nodos_conectados').toNumber() / r.get('total_nodos').toNumber()) * 100).toFixed(2) + '%'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  } finally { session.close(); }
+});
+
+// GET obtener información de tipos de relaciones
+app.get('/api/relaciones/tipos', async (req, res) => {
+  const session = getSession();
+  try {
+    const result = await session.run(`
+      MATCH ()-[r]->()
+      RETURN DISTINCT type(r) as tipo, count(r) as cantidad
+      ORDER BY cantidad DESC
+    `);
+    const data = result.records.map(r => ({
+      tipo: r.get('tipo'),
+      cantidad: r.get('cantidad').toNumber()
+    }));
+    res.json({ success: true, data });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }

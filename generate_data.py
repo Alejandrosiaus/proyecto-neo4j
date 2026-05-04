@@ -274,11 +274,139 @@ for d in dispositivos:
         "verificado": random.choice([True, False])
     })
 
+# UBICADO_EN: Dispositivo -> Ubicacion
+ubic_rel = []
+for d in dispositivos:
+    ubic_rel.append({
+        "id_dispositivo": d["id_dispositivo"],
+        "id_ubicacion": d["id_ubicacion"],
+        "fecha": random_date(2022, 2025),
+        "precision": round(random.uniform(0.5, 1.0), 2),
+        "verificado": random.choice([True, False])
+    })
+
 with open(f"{OUTPUT_DIR}/rel_ubicado_en.csv", "w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(f, fieldnames=ubic_rel[0].keys())
     writer.writeheader()
     writer.writerows(ubic_rel)
 print(f"  ✓ {len(ubic_rel)} relaciones UBICADO_EN")
+
+# ======================== NUEVAS RELACIONES ========================
+
+# SOSPECHA_DE: Usuario -> Usuario (relación entre usuarios sospechosos)
+sospecha_rel = []
+for u1 in usuarios[:300]:  # Solo primeros 300 usuarios para crear redes
+    num_sospechas = random.randint(0, 3)
+    for _ in range(num_sospechas):
+        u2_id = random.randint(1, NUM_USUARIOS)
+        while u2_id == u1["id_usuario"]:
+            u2_id = random.randint(1, NUM_USUARIOS)
+        sospecha_rel.append({
+            "id_usuario_1": u1["id_usuario"],
+            "id_usuario_2": u2_id,
+            "fecha_investigacion": random_date(2022, 2025),
+            "nivel_riesgo": random.choice(["Bajo", "Medio", "Alto"]),
+            "razon": random.choice(["Patrones similares", "Conexiones comunes", "Actividad sospechosa"]),
+            "investigador": f"Inv_{random.randint(1, 10)}"
+        })
+
+with open(f"{OUTPUT_DIR}/rel_sospecha_de.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=sospecha_rel[0].keys())
+    writer.writeheader()
+    writer.writerows(sospecha_rel)
+print(f"  ✓ {len(sospecha_rel)} relaciones SOSPECHA_DE")
+
+# VINCULADO_CON: Cuenta -> Cuenta (cuentas relacionadas)
+vinculado_rel = []
+for c1 in cuentas[:300]:
+    num_vinculos = random.randint(0, 2)
+    for _ in range(num_vinculos):
+        c2_id = random.randint(1, NUM_CUENTAS)
+        while c2_id == c1["id_cuenta"]:
+            c2_id = random.randint(1, NUM_CUENTAS)
+        vinculado_rel.append({
+            "id_cuenta_1": c1["id_cuenta"],
+            "id_cuenta_2": c2_id,
+            "fecha_vinculo": random_date(2020, 2024),
+            "tipo_vinculo": random.choice(["Transferencias frecuentes", "Mismo propietario", "Transferencias circulares"]),
+            "confianza": round(random.uniform(0.3, 0.95), 2)
+        })
+
+with open(f"{OUTPUT_DIR}/rel_vinculado_con.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=vinculado_rel[0].keys())
+    writer.writeheader()
+    writer.writerows(vinculado_rel)
+print(f"  ✓ {len(vinculado_rel)} relaciones VINCULADO_CON")
+
+# REALIZA: Usuario -> Transaccion (usuario realiza transacción)
+realiza_rel = []
+for t in transacciones:
+    # Obtener usuario desde cuenta de origen
+    for c in cuentas:
+        if c["id_cuenta"] == t["id_cuenta_origen"]:
+            uid = c["id_usuario_principal"]
+            realiza_rel.append({
+                "id_usuario": uid,
+                "id_transaccion": t["id_transaccion"],
+                "autorizacion": random.choice([True, True, False]),
+                "metodo_autorizacion": random.choice(["Biometrico", "OTP", "PIN", "Contraseña"]),
+                "timestamp": random_date(2022, 2025)
+            })
+            break
+
+with open(f"{OUTPUT_DIR}/rel_realiza.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=realiza_rel[0].keys())
+    writer.writeheader()
+    writer.writerows(realiza_rel)
+print(f"  ✓ {len(realiza_rel)} relaciones REALIZA")
+
+# INTENTA_DESDE: Usuario -> Dispositivo (usuario intenta acceso desde dispositivo)
+intenta_rel = []
+used_pairs = set()
+for u in usuarios:
+    num_intentos = random.randint(1, 4)
+    for _ in range(num_intentos):
+        did = random.randint(1, NUM_DISPOSITIVOS)
+        key = (u["id_usuario"], did)
+        if key not in used_pairs:
+            used_pairs.add(key)
+            intenta_rel.append({
+                "id_usuario": u["id_usuario"],
+                "id_dispositivo": did,
+                "fecha_intento": random_date(2022, 2025),
+                "resultado": random.choice(["Exitoso", "Fallido", "Bloqueado"]),
+                "cantidad_intentos": random.randint(1, 10),
+                "razon_fallo": random.choice(["Sin problema", "Contraseña incorrecta", "Dispositivo bloqueado", "Limitado por hora"])
+            })
+
+with open(f"{OUTPUT_DIR}/rel_intenta_desde.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=intenta_rel[0].keys())
+    writer.writeheader()
+    writer.writerows(intenta_rel)
+print(f"  ✓ {len(intenta_rel)} relaciones INTENTA_DESDE")
+
+# REPORTA_A: Usuario -> Usuario (usuario reporta a otro usuario)
+reporta_rel = []
+for u in usuarios[:200]:
+    num_reportes = random.randint(0, 2)
+    for _ in range(num_reportes):
+        u2_id = random.randint(1, NUM_USUARIOS)
+        while u2_id == u["id_usuario"]:
+            u2_id = random.randint(1, NUM_USUARIOS)
+        reporta_rel.append({
+            "id_usuario_reportador": u["id_usuario"],
+            "id_usuario_reportado": u2_id,
+            "fecha_reporte": random_date(2022, 2025),
+            "tipo_reporte": random.choice(["Fraude", "Phishing", "Comportamiento sospechoso", "Solicitud de datos"]),
+            "estado": random.choice(["Nuevo", "En revisión", "Cerrado"]),
+            "comentarios": f"Reporte_{random.randint(1000, 9999)}"
+        })
+
+with open(f"{OUTPUT_DIR}/rel_reporta_a.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=reporta_rel[0].keys())
+    writer.writeheader()
+    writer.writerows(reporta_rel)
+print(f"  ✓ {len(reporta_rel)} relaciones REPORTA_A")
 
 print("\n✅ Todos los CSVs generados en carpeta 'data_csv/'")
 print(f"\n📊 RESUMEN DE NODOS:")
@@ -288,6 +416,21 @@ print(f"   Transacciones:  {NUM_TRANSACCIONES}")
 print(f"   Dispositivos:   {NUM_DISPOSITIVOS}")
 print(f"   Ubicaciones:    {NUM_UBICACIONES}")
 print(f"   TOTAL:          {NUM_USUARIOS+NUM_CUENTAS+NUM_TRANSACCIONES+NUM_DISPOSITIVOS+NUM_UBICACIONES} nodos ✓")
+
+print(f"\n📋 TIPOS DE RELACIONES (10 TIPOS):")
+print(f"   1. TIENE (Usuario -> Cuenta)")
+print(f"   2. USA (Usuario -> Dispositivo)")
+print(f"   3. REGISTRADO_EN (Usuario -> Ubicacion)")
+print(f"   4. UBICADO_EN (Dispositivo -> Ubicacion)")
+print(f"   5. SOSPECHA_DE (Usuario -> Usuario)")
+print(f"   6. VINCULADO_CON (Cuenta -> Cuenta)")
+print(f"   7. REALIZA (Usuario -> Transaccion)")
+print(f"   8. INTENTA_DESDE (Usuario -> Dispositivo)")
+print(f"   9. REPORTA_A (Usuario -> Usuario)")
+print(f"   10. PERTENECE_A (Cuenta -> Usuario)")
+print(f"   11. REALIZA_REL (Cuenta -> Transaccion)")
+print(f"   12. ORIGEN/DESTINO/REALIZADA_DESDE/OCURRE_EN (en server.js)")
+
 print(f"\n📂 Archivos creados:")
-for f in os.listdir(OUTPUT_DIR):
+for f in sorted(os.listdir(OUTPUT_DIR)):
     print(f"   - {OUTPUT_DIR}/{f}")

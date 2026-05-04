@@ -1,0 +1,210 @@
+id_usuario_reportador,id_usuario_reportado,fecha_reporte,tipo_reporte,estado,comentarios
+1,641,2023-06-28,Fraude,Cerrado,Reporte_8843
+1,607,2025-10-25,Comportamiento sospechoso,Nuevo,Reporte_6753
+2,145,2022-09-15,Fraude,Nuevo,Reporte_2025
+2,982,2023-04-12,Comportamiento sospechoso,Nuevo,Reporte_1425
+3,841,2024-04-26,Comportamiento sospechoso,Cerrado,Reporte_5069
+4,582,2023-03-19,Phishing,En revisión,Reporte_7883
+6,522,2023-02-19,Solicitud de datos,Nuevo,Reporte_3036
+6,803,2023-12-03,Solicitud de datos,En revisión,Reporte_6014
+7,88,2025-08-01,Solicitud de datos,En revisión,Reporte_3492
+9,717,2023-10-29,Comportamiento sospechoso,Cerrado,Reporte_9473
+10,642,2023-07-06,Solicitud de datos,Cerrado,Reporte_2298
+10,437,2025-08-04,Phishing,En revisión,Reporte_2603
+11,693,2023-10-22,Solicitud de datos,Cerrado,Reporte_3796
+12,864,2025-07-27,Solicitud de datos,Cerrado,Reporte_2048
+12,900,2023-06-13,Fraude,En revisión,Reporte_6380
+13,31,2022-06-26,Comportamiento sospechoso,En revisión,Reporte_8458
+13,15,2022-01-25,Comportamiento sospechoso,Cerrado,Reporte_1267
+15,195,2025-08-05,Phishing,En revisión,Reporte_6473
+16,969,2022-07-05,Fraude,Cerrado,Reporte_3791
+16,540,2025-07-05,Solicitud de datos,Cerrado,Reporte_2273
+19,529,2023-03-07,Comportamiento sospechoso,En revisión,Reporte_8330
+19,37,2022-07-05,Solicitud de datos,Nuevo,Reporte_2593
+20,89,2025-09-15,Comportamiento sospechoso,Cerrado,Reporte_5868
+22,710,2023-05-27,Comportamiento sospechoso,Nuevo,Reporte_6917
+24,15,2025-06-09,Comportamiento sospechoso,Nuevo,Reporte_1471
+25,398,2024-01-03,Comportamiento sospechoso,Cerrado,Reporte_5592
+25,983,2023-07-17,Fraude,Cerrado,Reporte_1197
+26,600,2025-04-06,Comportamiento sospechoso,Cerrado,Reporte_3550
+26,671,2025-09-19,Phishing,Nuevo,Reporte_6472
+27,878,2025-04-01,Solicitud de datos,Nuevo,Reporte_1189
+28,241,2025-05-30,Solicitud de datos,En revisión,Reporte_3240
+28,673,2023-11-26,Fraude,Cerrado,Reporte_9205
+31,978,2025-07-18,Comportamiento sospechoso,Nuevo,Reporte_5945
+31,837,2025-04-15,Fraude,Nuevo,Reporte_3922
+32,231,2025-05-08,Solicitud de datos,En revisión,Reporte_4590
+33,302,2023-06-13,Solicitud de datos,Nuevo,Reporte_8330
+34,885,2023-10-16,Comportamiento sospechoso,En revisión,Reporte_4122
+35,560,2022-12-15,Phishing,Nuevo,Reporte_5448
+35,31,2025-03-03,Fraude,En revisión,Reporte_1547
+36,711,2025-03-05,Comportamiento sospechoso,En revisión,Reporte_6001
+36,924,2023-03-12,Phishing,En revisión,Reporte_9144
+37,154,2025-02-19,Phishing,En revisión,Reporte_6779
+37,595,2024-11-29,Solicitud de datos,En revisión,Reporte_9592
+39,589,2025-02-09,Fraude,Nuevo,Reporte_6832
+41,237,2022-08-12,Comportamiento sospechoso,En revisión,Reporte_3587
+41,596,2025-07-03,Phishing,Nuevo,Reporte_9201
+42,761,2025-10-12,Phishing,En revisión,Reporte_6866
+43,498,2022-12-14,Phishing,En revisión,Reporte_5064
+43,670,2024-02-08,Phishing,Cerrado,Reporte_6424
+44,725,2024-10-26,Comportamiento sospechoso,Cerrado,Reporte_9926
+44,76,2022-08-05,Comportamiento sospechoso,En revisión,Reporte_8979
+45,541,2024-07-29,Phishing,Cerrado,Reporte_7695
+46,539,2022-03-02,Comportamiento sospechoso,Nuevo,Reporte_8511
+46,309,2023-10-04,Fraude,Nuevo,Reporte_6461
+48,474,2022-06-02,Solicitud de datos,Cerrado,Reporte_2390
+50,40,2022-02-19,Phishing,Nuevo,Reporte_1856
+50,252,2023-11-30,Phishing,Cerrado,Reporte_8779
+51,995,2022-07-20,Solicitud de datos,Cerrado,Reporte_3830
+52,403,2023-03-31,Phishing,En revisión,Reporte_6011
+52,817,2025-02-01,Solicitud de datos,Cerrado,Reporte_9267
+54,936,2022-03-18,Fraude,Nuevo,Reporte_9277
+55,738,2025-08-11,Comportamiento sospechoso,Cerrado,Reporte_6878
+56,558,2023-01-12,Fraude,En revisión,Reporte_7615
+56,645,2022-07-26,Solicitud de datos,Cerrado,Reporte_3744
+57,32,2022-06-20,Fraude,Nuevo,Reporte_9423
+58,507,2022-09-14,Fraude,En revisión,Reporte_3147
+58,702,2025-01-13,Phishing,En revisión,Reporte_1033
+59,622,2024-02-18,Solicitud de datos,Cerrado,Reporte_9279
+60,800,2023-05-30,Solicitud de datos,Cerrado,Reporte_5715
+61,249,2022-06-28,Solicitud de datos,Nuevo,Reporte_4239
+61,952,2022-10-02,Phishing,Nuevo,Reporte_7683
+63,725,2025-02-07,Fraude,En revisión,Reporte_3626
+64,292,2023-03-21,Comportamiento sospechoso,Cerrado,Reporte_6953
+65,585,2023-03-10,Phishing,Cerrado,Reporte_9015
+66,940,2023-06-28,Phishing,En revisión,Reporte_3242
+66,892,2022-04-17,Comportamiento sospechoso,Nuevo,Reporte_3668
+67,57,2025-04-09,Fraude,En revisión,Reporte_1672
+68,646,2023-03-08,Comportamiento sospechoso,En revisión,Reporte_1931
+68,201,2024-07-14,Phishing,En revisión,Reporte_1202
+69,184,2025-08-28,Solicitud de datos,Cerrado,Reporte_3826
+69,352,2025-11-29,Phishing,En revisión,Reporte_2112
+70,381,2022-06-21,Comportamiento sospechoso,En revisión,Reporte_2423
+71,950,2025-01-19,Phishing,Cerrado,Reporte_3912
+71,956,2025-11-08,Solicitud de datos,Nuevo,Reporte_1902
+75,769,2025-08-26,Fraude,Nuevo,Reporte_3788
+79,698,2024-10-30,Solicitud de datos,Cerrado,Reporte_5589
+79,994,2025-10-19,Comportamiento sospechoso,En revisión,Reporte_2554
+82,431,2025-08-26,Fraude,En revisión,Reporte_9752
+83,440,2022-01-16,Solicitud de datos,Cerrado,Reporte_7608
+84,296,2025-08-21,Phishing,Nuevo,Reporte_8436
+86,501,2022-07-30,Phishing,Cerrado,Reporte_7072
+87,587,2025-06-06,Phishing,Cerrado,Reporte_4845
+87,931,2023-05-21,Fraude,Nuevo,Reporte_9964
+88,598,2024-10-21,Comportamiento sospechoso,Nuevo,Reporte_2453
+88,521,2024-05-30,Fraude,En revisión,Reporte_5405
+93,169,2024-02-12,Phishing,En revisión,Reporte_8373
+93,278,2024-11-16,Comportamiento sospechoso,En revisión,Reporte_7581
+94,507,2023-09-18,Solicitud de datos,Cerrado,Reporte_6332
+94,351,2022-02-19,Comportamiento sospechoso,En revisión,Reporte_6133
+95,65,2025-03-10,Comportamiento sospechoso,Nuevo,Reporte_5169
+95,131,2023-11-20,Comportamiento sospechoso,Cerrado,Reporte_3307
+96,327,2025-09-24,Fraude,Cerrado,Reporte_6971
+96,760,2022-05-09,Fraude,En revisión,Reporte_6018
+97,941,2023-06-28,Solicitud de datos,Cerrado,Reporte_7123
+97,882,2022-01-18,Comportamiento sospechoso,En revisión,Reporte_7077
+99,864,2022-12-17,Comportamiento sospechoso,En revisión,Reporte_3502
+101,576,2022-02-17,Phishing,Cerrado,Reporte_3508
+101,432,2022-01-06,Phishing,Cerrado,Reporte_8863
+102,759,2025-12-07,Comportamiento sospechoso,Cerrado,Reporte_1398
+102,834,2023-10-23,Solicitud de datos,Cerrado,Reporte_7948
+103,844,2025-07-27,Solicitud de datos,Cerrado,Reporte_4238
+103,951,2023-03-01,Comportamiento sospechoso,Nuevo,Reporte_1587
+105,564,2025-05-24,Solicitud de datos,En revisión,Reporte_2472
+105,88,2022-04-17,Solicitud de datos,En revisión,Reporte_4281
+108,917,2024-05-15,Solicitud de datos,Cerrado,Reporte_6632
+108,250,2024-01-17,Fraude,Cerrado,Reporte_6803
+109,634,2022-08-07,Solicitud de datos,Nuevo,Reporte_2318
+110,533,2024-03-30,Phishing,Cerrado,Reporte_4856
+111,725,2024-01-02,Comportamiento sospechoso,Nuevo,Reporte_6649
+111,105,2022-03-01,Phishing,En revisión,Reporte_7621
+112,449,2023-04-29,Fraude,Cerrado,Reporte_9861
+114,556,2025-09-21,Fraude,Cerrado,Reporte_2506
+116,497,2022-09-20,Solicitud de datos,Cerrado,Reporte_5548
+116,441,2022-01-29,Fraude,Nuevo,Reporte_2997
+118,446,2024-04-30,Phishing,Cerrado,Reporte_2973
+119,817,2022-05-14,Fraude,Cerrado,Reporte_9350
+119,274,2025-01-20,Comportamiento sospechoso,En revisión,Reporte_8476
+120,622,2025-08-17,Phishing,Cerrado,Reporte_4674
+120,854,2024-11-26,Fraude,Nuevo,Reporte_5096
+123,503,2024-04-11,Solicitud de datos,Cerrado,Reporte_7525
+124,562,2023-06-26,Solicitud de datos,Nuevo,Reporte_6435
+125,109,2022-02-25,Fraude,En revisión,Reporte_6243
+125,173,2025-03-21,Solicitud de datos,Cerrado,Reporte_2677
+126,680,2023-02-20,Fraude,En revisión,Reporte_4074
+127,944,2022-07-21,Fraude,Nuevo,Reporte_9262
+127,876,2024-06-30,Comportamiento sospechoso,Nuevo,Reporte_4129
+129,3,2024-04-21,Fraude,En revisión,Reporte_4697
+129,350,2025-12-09,Comportamiento sospechoso,Cerrado,Reporte_9017
+131,489,2024-06-23,Phishing,Nuevo,Reporte_8025
+132,296,2022-05-01,Fraude,En revisión,Reporte_3915
+133,578,2023-12-02,Phishing,En revisión,Reporte_6890
+134,466,2025-06-07,Solicitud de datos,Nuevo,Reporte_9750
+135,693,2022-03-05,Phishing,En revisión,Reporte_3537
+135,329,2025-03-24,Comportamiento sospechoso,En revisión,Reporte_2749
+136,739,2024-12-31,Phishing,En revisión,Reporte_6173
+139,567,2022-09-13,Fraude,Nuevo,Reporte_9146
+141,245,2024-03-24,Comportamiento sospechoso,Cerrado,Reporte_7640
+141,361,2025-12-07,Solicitud de datos,En revisión,Reporte_2107
+142,645,2022-03-30,Comportamiento sospechoso,Nuevo,Reporte_9169
+142,178,2023-01-24,Solicitud de datos,En revisión,Reporte_6087
+144,314,2024-08-25,Solicitud de datos,Cerrado,Reporte_1917
+146,177,2024-06-01,Fraude,En revisión,Reporte_5862
+147,395,2025-03-05,Phishing,En revisión,Reporte_9424
+147,934,2024-12-05,Phishing,Cerrado,Reporte_8943
+148,566,2023-06-29,Solicitud de datos,Cerrado,Reporte_2837
+148,964,2025-12-28,Solicitud de datos,En revisión,Reporte_6289
+149,658,2022-06-15,Comportamiento sospechoso,En revisión,Reporte_5241
+149,362,2022-02-04,Phishing,Nuevo,Reporte_4210
+152,650,2024-11-10,Fraude,En revisión,Reporte_3607
+153,271,2022-09-20,Comportamiento sospechoso,Cerrado,Reporte_2685
+154,805,2025-05-16,Solicitud de datos,En revisión,Reporte_5911
+155,913,2025-10-23,Phishing,En revisión,Reporte_4555
+156,719,2023-01-13,Fraude,En revisión,Reporte_2874
+157,520,2025-04-16,Phishing,Cerrado,Reporte_5371
+159,123,2024-12-08,Comportamiento sospechoso,Nuevo,Reporte_5745
+160,602,2022-05-01,Fraude,En revisión,Reporte_1325
+160,405,2024-10-05,Fraude,Cerrado,Reporte_9099
+161,130,2023-07-03,Fraude,Cerrado,Reporte_3088
+162,221,2023-03-18,Fraude,Nuevo,Reporte_3993
+162,481,2023-03-24,Phishing,Cerrado,Reporte_6276
+164,915,2025-05-15,Phishing,En revisión,Reporte_9093
+164,26,2022-10-19,Solicitud de datos,Cerrado,Reporte_9130
+167,172,2023-12-24,Solicitud de datos,Nuevo,Reporte_6897
+167,464,2024-10-02,Phishing,Cerrado,Reporte_3015
+168,337,2023-05-08,Solicitud de datos,Nuevo,Reporte_8287
+169,789,2024-02-23,Fraude,Nuevo,Reporte_7432
+169,120,2024-12-14,Comportamiento sospechoso,Nuevo,Reporte_7699
+170,164,2025-04-12,Phishing,Nuevo,Reporte_7745
+170,598,2022-06-01,Comportamiento sospechoso,En revisión,Reporte_2768
+171,562,2023-03-02,Fraude,Nuevo,Reporte_4180
+173,377,2024-02-16,Comportamiento sospechoso,En revisión,Reporte_2335
+173,330,2025-02-07,Solicitud de datos,Cerrado,Reporte_8948
+174,534,2022-11-01,Solicitud de datos,En revisión,Reporte_9784
+175,214,2025-11-01,Phishing,Nuevo,Reporte_9948
+175,909,2025-09-03,Phishing,Cerrado,Reporte_1297
+176,768,2022-09-23,Fraude,En revisión,Reporte_9062
+176,246,2025-07-28,Phishing,Nuevo,Reporte_9755
+178,421,2022-07-24,Solicitud de datos,Cerrado,Reporte_4027
+178,146,2024-10-27,Solicitud de datos,Cerrado,Reporte_5734
+179,239,2022-06-28,Fraude,Nuevo,Reporte_9276
+182,534,2022-08-17,Solicitud de datos,Nuevo,Reporte_2041
+185,177,2025-02-14,Comportamiento sospechoso,En revisión,Reporte_2018
+187,557,2025-05-23,Solicitud de datos,En revisión,Reporte_2770
+188,426,2023-12-15,Phishing,Cerrado,Reporte_8091
+188,669,2023-05-07,Fraude,Nuevo,Reporte_7659
+189,630,2024-12-12,Fraude,Nuevo,Reporte_3271
+190,692,2024-06-26,Phishing,Cerrado,Reporte_7657
+190,445,2024-02-27,Phishing,Cerrado,Reporte_1337
+191,70,2023-02-21,Solicitud de datos,En revisión,Reporte_2101
+191,858,2022-11-22,Phishing,Cerrado,Reporte_2170
+192,453,2023-12-08,Solicitud de datos,En revisión,Reporte_4496
+192,770,2023-11-26,Fraude,Cerrado,Reporte_9737
+195,886,2022-01-21,Comportamiento sospechoso,En revisión,Reporte_4613
+195,23,2022-07-14,Phishing,En revisión,Reporte_1453
+196,287,2024-11-10,Phishing,En revisión,Reporte_2621
+197,219,2025-08-05,Phishing,En revisión,Reporte_7868
+197,479,2022-10-29,Fraude,En revisión,Reporte_2033
+198,603,2022-02-07,Fraude,En revisión,Reporte_8926
+198,229,2023-07-21,Phishing,En revisión,Reporte_3834
