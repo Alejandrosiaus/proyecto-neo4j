@@ -51,9 +51,12 @@ const recordToObj = (record) => {
 app.get('/api/usuarios', async (req, res) => {
   const session = getSession();
   try {
-    const { nombre, estado, limit = 50, skip = 0 } = req.query;
+    const { nombre, estado, limit, skip } = req.query;
+    const limitVal = Math.max(1, Math.min(parseInt(limit) || 50, 1000));
+    const skipVal = Math.max(0, parseInt(skip) || 0);
+
     let conditions = [];
-    let params = { limit: parseInt(limit), skip: parseInt(skip) };
+    let params = { limit: limitVal, skip: skipVal };
 
     if (nombre) { conditions.push('toLower(u.nombre) CONTAINS toLower($nombre)'); params.nombre = nombre; }
     if (estado !== undefined) { conditions.push('u.estado = $estado'); params.estado = estado === 'true'; }
@@ -64,7 +67,7 @@ app.get('/api/usuarios', async (req, res) => {
       OPTIONAL MATCH (u)-[:TIENE]->(c:Cuenta)
       RETURN u, count(c) as num_cuentas
       ORDER BY u.id_usuario
-      SKIP $skip LIMIT $limit
+      SKIP toInteger($skip) LIMIT toInteger($limit)
     `;
     const result = await session.run(query, params);
     const usuarios = result.records.map(r => ({
@@ -320,9 +323,12 @@ app.delete('/api/usuarios/bulk/delete', async (req, res) => {
 app.get('/api/cuentas', async (req, res) => {
   const session = getSession();
   try {
-    const { tipo, estado, min_saldo, max_saldo, limit = 50, skip = 0 } = req.query;
+    const { tipo, estado, min_saldo, max_saldo, limit, skip } = req.query;
+    const limitVal = Math.max(1, Math.min(parseInt(limit) || 50, 1000));
+    const skipVal = Math.max(0, parseInt(skip) || 0);
+
     let conditions = [];
-    let params = { limit: parseInt(limit), skip: parseInt(skip) };
+    let params = { limit: limitVal, skip: skipVal };
 
     if (tipo) { conditions.push('c.tipo = $tipo'); params.tipo = tipo; }
     if (estado !== undefined) { conditions.push('c.estado = $estado'); params.estado = estado === 'true'; }
@@ -334,7 +340,7 @@ app.get('/api/cuentas', async (req, res) => {
       `MATCH (c:Cuenta) ${where}
        OPTIONAL MATCH (u:Usuario)-[:TIENE]->(c)
        RETURN c, u.nombre as propietario
-       ORDER BY c.id_cuenta SKIP $skip LIMIT $limit`,
+       ORDER BY c.id_cuenta SKIP toInteger($skip) LIMIT toInteger($limit)`,
       params
     );
     const cuentas = result.records.map(r => ({
@@ -406,9 +412,12 @@ app.delete('/api/cuentas/:id', async (req, res) => {
 app.get('/api/transacciones', async (req, res) => {
   const session = getSession();
   try {
-    const { tipo, es_fraudulenta, min_monto, max_monto, fecha_desde, fecha_hasta, limit = 50, skip = 0 } = req.query;
+    const { tipo, es_fraudulenta, min_monto, max_monto, fecha_desde, fecha_hasta, limit, skip } = req.query;
+    const limitVal = Math.max(1, Math.min(parseInt(limit) || 50, 1000));
+    const skipVal = Math.max(0, parseInt(skip) || 0);
+
     let conditions = [];
-    let params = { limit: parseInt(limit), skip: parseInt(skip) };
+    let params = { limit: limitVal, skip: skipVal };
 
     if (tipo) { conditions.push('t.tipo = $tipo'); params.tipo = tipo; }
     if (es_fraudulenta !== undefined) { conditions.push('t.es_fraudulenta = $es_fraudulenta'); params.es_fraudulenta = es_fraudulenta === 'true'; }
@@ -421,7 +430,7 @@ app.get('/api/transacciones', async (req, res) => {
        OPTIONAL MATCH (t)-[:ORIGEN]->(co:Cuenta)
        OPTIONAL MATCH (t)-[:DESTINO]->(cd:Cuenta)
        RETURN t, co.id_cuenta as origen, cd.id_cuenta as destino
-       ORDER BY t.fecha DESC SKIP $skip LIMIT $limit`,
+       ORDER BY t.fecha DESC SKIP toInteger($skip) LIMIT toInteger($limit)`,
       params
     );
     const txns = result.records.map(r => ({
@@ -513,11 +522,13 @@ app.delete('/api/transacciones/bulk/delete', async (req, res) => {
 app.get('/api/dispositivos', async (req, res) => {
   const session = getSession();
   try {
-    const { tipo, limit = 50, skip = 0 } = req.query;
+    const { tipo, limit, skip } = req.query;
+    const limitVal = Math.max(1, Math.min(parseInt(limit) || 50, 1000));
+    const skipVal = Math.max(0, parseInt(skip) || 0);
     const where = tipo ? 'WHERE d.tipo = $tipo' : '';
     const result = await session.run(
-      `MATCH (d:Dispositivo) ${where} RETURN d ORDER BY d.id_dispositivo SKIP $skip LIMIT $limit`,
-      { tipo, limit: parseInt(limit), skip: parseInt(skip) }
+      `MATCH (d:Dispositivo) ${where} RETURN d ORDER BY d.id_dispositivo SKIP toInteger($skip) LIMIT toInteger($limit)`,
+      { tipo, limit: limitVal, skip: skipVal }
     );
     res.json({ success: true, data: result.records.map(r => r.get('d').properties) });
   } catch (err) {
