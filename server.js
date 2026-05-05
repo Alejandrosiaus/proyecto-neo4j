@@ -25,15 +25,29 @@ const driver = neo4j.driver(
 
 const getSession = () => driver.session();
 
+// Helper para convertir propiedades de un nodo Neo4j a tipos JS planos
+const convertProps = (props) => {
+  if (!props) return {};
+  const result = {};
+  for (const [key, val] of Object.entries(props)) {
+    if (neo4j.isInt(val)) {
+      result[key] = val.toNumber();
+    } else {
+      result[key] = val;
+    }
+  }
+  return result;
+};
+
 // Helper para convertir resultados Neo4j a objetos JS
 const recordToObj = (record) => {
   const obj = {};
   record.keys.forEach(key => {
     const val = record.get(key);
     if (val && val.constructor && val.constructor.name === 'Node') {
-      obj[key] = { ...val.properties, labels: val.labels };
+      obj[key] = { ...convertProps(val.properties), labels: val.labels };
     } else if (val && val.constructor && val.constructor.name === 'Relationship') {
-      obj[key] = { ...val.properties, type: val.type };
+      obj[key] = { ...convertProps(val.properties), type: val.type };
     } else if (neo4j.isInt(val)) {
       obj[key] = val.toNumber();
     } else {
@@ -71,7 +85,7 @@ app.get('/api/usuarios', async (req, res) => {
     `;
     const result = await session.run(query, params);
     const usuarios = result.records.map(r => ({
-      ...r.get('u').properties,
+      ...convertProps(r.get('u').properties),
       labels: r.get('u').labels,
       num_cuentas: r.get('num_cuentas').toNumber()
     }));
@@ -98,11 +112,11 @@ app.get('/api/usuarios/:id', async (req, res) => {
     res.json({
       success: true,
       data: {
-        ...r.get('u').properties,
+        ...convertProps(r.get('u').properties),
         labels: r.get('u').labels,
-        cuentas: r.get('cuentas').map(c => c.properties),
-        dispositivos: r.get('dispositivos').map(d => d.properties),
-        ubicacion: r.get('ub') ? r.get('ub').properties : null
+        cuentas: r.get('cuentas').map(c => convertProps(c.properties)),
+        dispositivos: r.get('dispositivos').map(d => convertProps(d.properties)),
+        ubicacion: r.get('ub') ? convertProps(r.get('ub').properties) : null
       }
     });
   } catch (err) {
@@ -128,7 +142,7 @@ app.post('/api/usuarios', async (req, res) => {
       }) RETURN u`,
       { nombre, email, fecha_registro, estado: estado ?? true, telefono: telefono ?? '', ocupacion: ocupacion ?? 'No especificado', score_credito: parseInt(score_credito) || 600 }
     );
-    res.json({ success: true, data: result.records[0].get('u').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('u').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -142,7 +156,7 @@ app.post('/api/usuarios/multi-label', async (req, res) => {
     const extraLabels = (labels_extra || []).map(l => `:${l}`).join('');
     const result = await session.run(
       `CREATE (u:Usuario${extraLabels} {
-        id_usuario: randomInteger() % 999999 + 100000,
+        id_usuario: toInteger(rand() * 9000000) + 1000000,
         nombre: $nombre,
         email: $email,
         fecha_registro: date($fecha_registro),
@@ -156,7 +170,7 @@ app.post('/api/usuarios/multi-label', async (req, res) => {
     res.json({
       success: true,
       data: {
-        ...result.records[0].get('u').properties,
+        ...convertProps(result.records[0].get('u').properties),
         labels: result.records[0].get('todas_labels')
       }
     });
@@ -170,14 +184,39 @@ app.put('/api/usuarios/:id', async (req, res) => {
   const session = getSession();
   try {
     const updates = req.body;
-    const setClause = Object.keys(updates).map(k => `u.${k} = $${k}`).join(', ');
+    const idParam = parseInt(req.params.id);
+    console.log('[PUT /api/usuarios] id recibido:', idParam, '| tipo:', typeof idParam);
+    console.log('[PUT /api/usuarios] campos a actualizar:', JSON.stringify(updates));
+
+    // Convertir tipos correctamente antes de enviar a Neo4j
+    const safeUpdates = {};
+    for (const [k, v] of Object.entries(updates)) {
+      if (v === 'true' || v === true)        safeUpdates[k] = true;
+      else if (v === 'false' || v === false)  safeUpdates[k] = false;
+      else if (typeof v === 'string' && !isNaN(v) && v.trim() !== '') safeUpdates[k] = Number(v);
+      else safeUpdates[k] = v;
+    }
+    console.log('[PUT /api/usuarios] safeUpdates:', JSON.stringify(safeUpdates));
+
+    const setClause = Object.keys(safeUpdates).map(k => `u.${k} = $${k}`).join(', ');
+    const params = { id: idParam, ...safeUpdates };
+    console.log('[PUT /api/usuarios] Cypher SET:', setClause);
+
     const result = await session.run(
-      `MATCH (u:Usuario {id_usuario: $id}) SET ${setClause} RETURN u`,
-      { id: parseInt(req.params.id), ...updates }
+      `MATCH (u:Usuario) WHERE toInteger(u.id_usuario) = toInteger($id) SET ${setClause} RETURN u`,
+      params
     );
-    if (!result.records.length) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-    res.json({ success: true, data: result.records[0].get('u').properties });
+    console.log('[PUT /api/usuarios] registros encontrados:', result.records.length);
+
+    if (!result.records.length) {
+      console.log('[PUT /api/usuarios] ERROR: Usuario no encontrado con id_usuario =', idParam);
+      return res.status(404).json({ success: false, error: `Usuario con id ${idParam} no encontrado` });
+    }
+    const updated = convertProps(result.records[0].get('u').properties);
+    console.log('[PUT /api/usuarios] OK, nuevo estado:', updated.estado, '| score:', updated.score_credito);
+    res.json({ success: true, data: updated });
   } catch (err) {
+    console.error('[PUT /api/usuarios] EXCEPCIÓN:', err.message);
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
 });
@@ -292,7 +331,7 @@ app.delete('/api/usuarios/:id', async (req, res) => {
   const session = getSession();
   try {
     await session.run(
-      `MATCH (u:Usuario {id_usuario: $id}) DETACH DELETE u`,
+      `MATCH (u:Usuario) WHERE toInteger(u.id_usuario) = toInteger($id) DETACH DELETE u`,
       { id: parseInt(req.params.id) }
     );
     res.json({ success: true, message: 'Usuario eliminado' });
@@ -344,7 +383,7 @@ app.get('/api/cuentas', async (req, res) => {
       params
     );
     const cuentas = result.records.map(r => ({
-      ...r.get('c').properties,
+      ...convertProps(r.get('c').properties),
       propietario: r.get('propietario')
     }));
     res.json({ success: true, data: cuentas });
@@ -360,7 +399,7 @@ app.post('/api/cuentas', async (req, res) => {
     const result = await session.run(
       `MATCH (u:Usuario {id_usuario: $id_usuario})
        CREATE (c:Cuenta {
-         id_cuenta: randomInteger() % 999999 + 100000,
+         id_cuenta: toInteger(rand() * 9000000) + 1000000,
          tipo: $tipo,
          saldo: $saldo,
          fecha_creacion: date($fecha_creacion),
@@ -373,7 +412,7 @@ app.post('/api/cuentas', async (req, res) => {
        RETURN c`,
       { tipo, saldo: parseFloat(saldo), fecha_creacion, estado: estado ?? true, moneda: moneda || 'GTQ', limite_diario: parseFloat(limite_diario) || 5000, id_usuario: parseInt(id_usuario) }
     );
-    res.json({ success: true, data: result.records[0].get('c').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('c').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -389,7 +428,7 @@ app.put('/api/cuentas/:id', async (req, res) => {
       { id: parseInt(req.params.id), ...updates }
     );
     if (!result.records.length) return res.status(404).json({ success: false, error: 'Cuenta no encontrada' });
-    res.json({ success: true, data: result.records[0].get('c').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('c').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -434,7 +473,7 @@ app.get('/api/transacciones', async (req, res) => {
       params
     );
     const txns = result.records.map(r => ({
-      ...r.get('t').properties,
+      ...convertProps(r.get('t').properties),
       cuenta_origen: r.get('origen'),
       cuenta_destino: r.get('destino')
     }));
@@ -454,7 +493,7 @@ app.post('/api/transacciones', async (req, res) => {
        MATCH (d:Dispositivo {id_dispositivo: $id_dispositivo})
        MATCH (ub:Ubicacion {id_ubicacion: $id_ubicacion})
        CREATE (t:Transaccion {
-         id_transaccion: randomInteger() % 9999999 + 1000000,
+         id_transaccion: toInteger(rand() * 90000000) + 10000000,
          monto: $monto,
          fecha: date($fecha),
          tipo: $tipo,
@@ -471,7 +510,7 @@ app.post('/api/transacciones', async (req, res) => {
        RETURN t`,
       { monto: parseFloat(monto), fecha, tipo, moneda: moneda || 'GTQ', canal: canal || 'Web', id_cuenta_origen: parseInt(id_cuenta_origen), id_cuenta_destino: parseInt(id_cuenta_destino), id_dispositivo: parseInt(id_dispositivo), id_ubicacion: parseInt(id_ubicacion) }
     );
-    res.json({ success: true, data: result.records[0].get('t').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('t').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -487,7 +526,7 @@ app.put('/api/transacciones/:id', async (req, res) => {
       { id: parseInt(req.params.id), ...updates }
     );
     if (!result.records.length) return res.status(404).json({ success: false, error: 'Transacción no encontrada' });
-    res.json({ success: true, data: result.records[0].get('t').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('t').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -530,7 +569,7 @@ app.get('/api/dispositivos', async (req, res) => {
       `MATCH (d:Dispositivo) ${where} RETURN d ORDER BY d.id_dispositivo SKIP toInteger($skip) LIMIT toInteger($limit)`,
       { tipo, limit: limitVal, skip: skipVal }
     );
-    res.json({ success: true, data: result.records.map(r => r.get('d').properties) });
+    res.json({ success: true, data: result.records.map(r => convertProps(r.get('d').properties)) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
@@ -544,7 +583,7 @@ app.get('/api/ubicaciones', async (req, res) => {
   const session = getSession();
   try {
     const result = await session.run(`MATCH (ub:Ubicacion) RETURN ub ORDER BY ub.pais LIMIT 200`);
-    res.json({ success: true, data: result.records.map(r => r.get('ub').properties) });
+    res.json({ success: true, data: result.records.map(r => convertProps(r.get('ub').properties)) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }

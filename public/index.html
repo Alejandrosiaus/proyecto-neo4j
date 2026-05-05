@@ -624,8 +624,18 @@
         <!-- UPDATE/DELETE form inline -->
         <div class="inline-actions">
           <input id="upd-u-id" type="number" placeholder="ID Usuario" style="max-width:130px">
-          <input id="upd-u-campo" type="text" placeholder="Campo (ej: estado)" style="max-width:160px">
-          <input id="upd-u-valor" type="text" placeholder="Nuevo valor" style="max-width:160px">
+          <select id="upd-u-campo" onchange="onCampoUsuarioChange()" style="max-width:170px">
+            <option value="">-- Campo --</option>
+            <option value="nombre">Nombre</option>
+            <option value="email">Email</option>
+            <option value="telefono">Teléfono</option>
+            <option value="ocupacion">Ocupación</option>
+            <option value="score_credito">Score Crédito</option>
+            <option value="estado">Estado</option>
+          </select>
+          <div id="upd-u-valor-wrap" style="display:contents">
+            <input id="upd-u-valor-text" type="text" placeholder="Nuevo valor" style="max-width:180px">
+          </div>
           <button class="btn btn-primary btn-sm" onclick="actualizarUsuario()"><svg class="ico ico-sm"><use href="#i-edit"/></svg>Actualizar</button>
           <button class="btn btn-danger btn-sm" onclick="eliminarUsuario()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
         </div>
@@ -1433,20 +1443,31 @@ async function loadRiesgo() {
 
 // ── USUARIOS ─────────────────────────────────────────────
 async function loadUsuarios() {
-  const params = new URLSearchParams();
-  const nombre = document.getElementById('f-u-nombre')?.value;
-  const estado = document.getElementById('f-u-estado')?.value;
-  if (nombre) params.append('nombre', nombre);
-  if (estado) params.append('estado', estado);
-  params.append('limit', '30');
-  const r = await fetch(`${API}/usuarios?${params}`);
-  const { data } = await r.json();
-  document.getElementById('usuarios-table').innerHTML = buildTable(data,
-    ['id_usuario','nombre','email','ocupacion','score_credito','estado','num_cuentas','labels'],
-    { estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activo':'Inactivo'}</span>`,
-      labels: v => `<div class="chip-list">${(v||[]).map(l=>`<span class="chip">${l}</span>`).join('')}</div>`,
-      score_credito: v => `<span style="color:${v>700?'var(--success)':v>500?'var(--warning)':'var(--danger)'}">${v}</span>` }
-  );
+  const tableEl = document.getElementById('usuarios-table');
+  try {
+    const params = new URLSearchParams();
+    const nombre = document.getElementById('f-u-nombre')?.value?.trim();
+    const estado = document.getElementById('f-u-estado')?.value;
+    if (nombre) params.append('nombre', nombre);
+    if (estado) params.append('estado', estado);
+    params.append('limit', '50');
+    tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando usuarios...</div>';
+    const r = await fetch(`${API}/usuarios?${params}`);
+    const json = await r.json();
+    if (!json.success) {
+      tableEl.innerHTML = `<div class="empty-state">Error: ${json.error || 'No se pudo cargar'}</div>`;
+      return;
+    }
+    const data = json.data || [];
+    tableEl.innerHTML = buildTable(data,
+      ['id_usuario','nombre','email','ocupacion','score_credito','estado','num_cuentas','labels'],
+      { estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activo':'Inactivo'}</span>`,
+        labels: v => `<div class="chip-list">${(v||[]).map(l=>`<span class="chip">${l}</span>`).join('')}</div>`,
+        score_credito: v => `<span style="color:${v>700?'var(--success)':v>500?'var(--warning)':'var(--danger)'}">${v}</span>` }
+    );
+  } catch (err) {
+    tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`;
+  }
 }
 
 async function crearUsuario() {
@@ -1460,10 +1481,13 @@ async function crearUsuario() {
     estado: true
   };
   if (!body.nombre || !body.email) return toast('Nombre y email son requeridos', 'error');
-  const r = await fetch(`${API}/usuarios`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) { toast(`Usuario creado: ${d.data.nombre}`); loadUsuarios(); }
-  else toast(d.error, 'error');
+  if (!body.fecha_registro) return toast('La fecha de registro es requerida', 'error');
+  try {
+    const r = await fetch(`${API}/usuarios`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { toast(`Usuario creado: ${d.data.nombre}`); await loadUsuarios(); }
+    else toast(d.error || 'Error al crear usuario', 'error');
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function crearUsuarioMultiLabel() {
@@ -1479,34 +1503,76 @@ async function crearUsuarioMultiLabel() {
     labels_extra
   };
   if (!body.nombre || !body.email) return toast('Nombre y email son requeridos', 'error');
-  const r = await fetch(`${API}/usuarios/multi-label`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) { toast(`Usuario creado con labels: ${d.data.labels?.join(', ')}`); loadUsuarios(); }
-  else toast(d.error, 'error');
+  if (!body.fecha_registro) return toast('La fecha de registro es requerida', 'error');
+  try {
+    const r = await fetch(`${API}/usuarios/multi-label`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { toast(`Usuario creado con labels: ${d.data.labels?.join(', ')}`); await loadUsuarios(); }
+    else toast(d.error || 'Error al crear usuario', 'error');
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+function onCampoUsuarioChange() {
+  const campo = document.getElementById('upd-u-campo').value;
+  const wrap = document.getElementById('upd-u-valor-wrap');
+  if (campo === 'estado') {
+    wrap.innerHTML = `
+      <select id="upd-u-valor-text" style="max-width:180px">
+        <option value="true">Activo</option>
+        <option value="false">Inactivo</option>
+      </select>`;
+  } else if (campo === 'score_credito') {
+    wrap.innerHTML = `<input id="upd-u-valor-text" type="number" min="0" max="1000" placeholder="Ej: 750" style="max-width:180px">`;
+  } else {
+    wrap.innerHTML = `<input id="upd-u-valor-text" type="text" placeholder="Nuevo valor" style="max-width:180px">`;
+  }
 }
 
 async function actualizarUsuario() {
   const id = parseInt(document.getElementById('upd-u-id').value);
   const campo = document.getElementById('upd-u-campo').value;
-  const valor = document.getElementById('upd-u-valor').value;
-  if (!id || !campo || !valor) return toast('Completa todos los campos', 'error');
-  let v = valor;
-  if (valor === 'true') v = true; else if (valor === 'false') v = false;
-  else if (!isNaN(valor)) v = Number(valor);
-  const r = await fetch(`${API}/usuarios/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: v}) });
-  const d = await r.json();
-  if (d.success) { toast('Usuario actualizado'); loadUsuarios(); }
-  else toast(d.error, 'error');
+  const valorEl = document.getElementById('upd-u-valor-text');
+  const valorRaw = valorEl ? valorEl.value : '';
+
+  if (!id || !campo || valorRaw === '') return toast('Completa ID, campo y valor', 'error');
+
+  // Convertir al tipo correcto según el campo
+  let v;
+  if (campo === 'estado') {
+    v = valorRaw === 'true'; // boolean directo
+  } else if (campo === 'score_credito') {
+    v = parseInt(valorRaw, 10);
+    if (isNaN(v)) return toast('Score Crédito debe ser un número', 'error');
+  } else {
+    v = valorRaw;
+  }
+
+  try {
+    const r = await fetch(`${API}/usuarios/${id}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({[campo]: v})
+    });
+    const d = await r.json();
+    if (d.success) {
+      toast(`✓ ${campo} actualizado correctamente`);
+      await loadUsuarios();
+    } else {
+      toast(d.error || 'Usuario no encontrado — revisa la consola del servidor', 'error');
+    }
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function eliminarUsuario() {
   const id = document.getElementById('upd-u-id').value;
   if (!id) return toast('Ingresa el ID del usuario', 'error');
   if (!confirm(`¿Eliminar usuario ID ${id}?`)) return;
-  const r = await fetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
-  const d = await r.json();
-  if (d.success) { toast('Usuario eliminado'); loadUsuarios(); }
-  else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/usuarios/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { toast('Usuario eliminado'); await loadUsuarios(); }
+    else toast(d.error || 'Error al eliminar', 'error');
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 // ── CUENTAS ──────────────────────────────────────────────
