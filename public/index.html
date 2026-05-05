@@ -4,282 +4,490 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FraudShield · Neo4j Banking</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #070a0f;
-    --surface: #0d1117;
-    --card: #111820;
-    --border: #1e2d3d;
-    --accent: #00d4ff;
-    --accent2: #ff4757;
-    --accent3: #2ed573;
-    --accent4: #ffa502;
-    --text: #c9d1d9;
-    --text-dim: #58a6b0;
-    --mono: 'Share Tech Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
+    /* Paleta calmada — slate neutro + un solo acento */
+    --bg: #0b0f17;
+    --surface: #111620;
+    --card: #151b27;
+    --card-hover: #1a2130;
+    --border: #232b3a;
+    --border-strong: #2d3648;
 
-  /* ── GRID BACKGROUND ── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none; z-index: 0;
+    --text: #e4e7ec;
+    --text-2: #a8b1c0;
+    --text-dim: #6b7589;
+
+    /* Un solo acento principal + semánticos suaves */
+    --accent: #6e8efb;       /* azul/violeta sereno */
+    --accent-soft: rgba(110,142,251,.12);
+    --accent-hover: #8ba3fc;
+
+    --success: #4ade80;
+    --success-soft: rgba(74,222,128,.10);
+    --danger: #f87171;
+    --danger-soft: rgba(248,113,113,.10);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251,191,36,.10);
+
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
   }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: 15px; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh; overflow-x: hidden;
+    letter-spacing: -.005em;
+  }
+
+  /* Iconos */
+  .ico { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; stroke-width: 1.75; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .ico-sm { width: 14px; height: 14px; }
+  .ico-lg { width: 22px; height: 22px; }
+  .ico-xl { width: 32px; height: 32px; stroke-width: 1.5; }
 
   /* ── HEADER ── */
   header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(7,10,15,0.95);
-    backdrop-filter: blur(12px);
+    background: rgba(11,15,23,.85);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
     border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
+    padding: 0 1.75rem;
     display: flex; align-items: center; justify-content: space-between;
     height: 60px;
   }
-  .logo { display: flex; align-items: center; gap: .75rem; }
+  .logo { display: flex; align-items: center; gap: .65rem; }
   .logo-icon {
     width: 32px; height: 32px;
-    background: var(--accent); border-radius: 6px;
-    display: grid; place-items: center; font-size: 16px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 8px;
+    display: grid; place-items: center;
   }
-  .logo-text { font-family: var(--sans); font-weight: 800; font-size: 1.1rem; letter-spacing: -.02em; }
+  .logo-text { font-weight: 700; font-size: 1rem; letter-spacing: -.015em; color: var(--text); }
   .logo-text span { color: var(--accent); }
-  .status-dot {
+  .status-pill {
     display: flex; align-items: center; gap: .5rem;
-    font-family: var(--mono); font-size: .75rem; color: var(--accent3);
+    font-family: var(--mono); font-size: .72rem;
+    color: var(--text-2);
+    padding: .35rem .7rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
   }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(74,222,128,.18); }
+  .dot.off { background: var(--danger); box-shadow: 0 0 0 3px rgba(248,113,113,.18); }
 
   /* ── LAYOUT ── */
   .shell { display: flex; min-height: calc(100vh - 60px); }
   nav {
-    width: 220px; flex-shrink: 0;
+    width: 240px; flex-shrink: 0;
     background: var(--surface);
     border-right: 1px solid var(--border);
-    padding: 1.5rem 0;
+    padding: 1rem .6rem;
     position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;
   }
+  nav::-webkit-scrollbar { width: 6px; }
+  nav::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
   nav .section-label {
-    font-family: var(--mono); font-size: .65rem; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: .1em;
-    padding: .75rem 1.25rem .25rem;
+    font-size: .68rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: 1rem .85rem .35rem;
+    font-weight: 600;
   }
+  nav .section-label:first-child { padding-top: .25rem; }
   nav a {
-    display: flex; align-items: center; gap: .6rem;
-    padding: .55rem 1.25rem;
-    color: var(--text); text-decoration: none;
-    font-size: .88rem; font-weight: 600;
-    border-left: 2px solid transparent;
-    transition: all .15s;
+    display: flex; align-items: center; gap: .65rem;
+    padding: .55rem .85rem;
+    color: var(--text-2); text-decoration: none;
+    font-size: .87rem; font-weight: 500;
+    border-radius: 7px;
+    transition: background .12s, color .12s;
     cursor: pointer;
   }
-  nav a:hover, nav a.active {
-    color: var(--accent); background: rgba(0,212,255,.06);
-    border-left-color: var(--accent);
+  nav a:hover { color: var(--text); background: rgba(255,255,255,.02); }
+  nav a.active {
+    color: var(--accent); background: var(--accent-soft);
+    font-weight: 600;
   }
-  nav a .icon { font-size: 1rem; width: 18px; text-align: center; }
+  nav a .ico { width: 17px; height: 17px; opacity: .85; }
+  nav a.active .ico { opacity: 1; }
 
-  main { flex: 1; padding: 2rem; position: relative; z-index: 1; }
+  main { flex: 1; padding: 2rem 2.5rem; position: relative; max-width: 1400px; }
 
   /* ── SECTION VIEWS ── */
   .view { display: none; }
-  .view.active { display: block; animation: fadeIn .2s ease; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .view.active { display: block; animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
 
-  h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: .25rem; }
-  .subtitle { font-family: var(--mono); font-size: .8rem; color: var(--text-dim); margin-bottom: 1.75rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: .35rem; color: var(--text); }
+  .subtitle { font-size: .88rem; color: var(--text-dim); margin-bottom: 1.75rem; font-weight: 400; }
 
   /* ── STAT CARDS ── */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .85rem; margin-bottom: 1.75rem; }
   .stat-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 1.25rem 1.5rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    display: flex; flex-direction: column; gap: .35rem;
   }
-  .stat-label { font-family: var(--mono); font-size: .7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
-  .stat-value { font-size: 1.9rem; font-weight: 800; margin-top: .2rem; line-height: 1; }
+  .stat-label { font-size: .72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .05em; font-weight: 500; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; color: var(--text); }
   .stat-value.cyan { color: var(--accent); }
-  .stat-value.red { color: var(--accent2); }
-  .stat-value.green { color: var(--accent3); }
-  .stat-value.yellow { color: var(--accent4); }
+  .stat-value.red { color: var(--danger); }
+  .stat-value.green { color: var(--success); }
+  .stat-value.yellow { color: var(--warning); }
 
   /* ── CARDS / PANELS ── */
   .panel {
-    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 1.5rem; margin-bottom: 1.5rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.4rem 1.5rem; margin-bottom: 1.25rem;
   }
   .panel-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.25rem;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
   }
-  .panel-title { font-weight: 700; font-size: 1rem; }
+  .panel-title {
+    display: flex; align-items: center; gap: .55rem;
+    font-weight: 600; font-size: .97rem; color: var(--text);
+    letter-spacing: -.005em;
+  }
+  .panel-title .ico { color: var(--text-2); }
   .panel-tag {
-    font-family: var(--mono); font-size: .7rem; padding: .2rem .6rem;
-    background: rgba(0,212,255,.1); color: var(--accent); border-radius: 4px;
+    font-family: var(--mono); font-size: .68rem; padding: .25rem .55rem;
+    background: var(--accent-soft); color: var(--accent); border-radius: 5px;
+    font-weight: 500; letter-spacing: .02em;
   }
-  .panel-tag.red { background: rgba(255,71,87,.1); color: var(--accent2); }
-  .panel-tag.green { background: rgba(46,213,115,.1); color: var(--accent3); }
+  .panel-tag.red { background: var(--danger-soft); color: var(--danger); }
+  .panel-tag.green { background: var(--success-soft); color: var(--success); }
+  .panel-tag.yellow { background: var(--warning-soft); color: var(--warning); }
 
   /* ── FORMS ── */
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-  .form-group { display: flex; flex-direction: column; gap: .4rem; }
-  label { font-size: .8rem; font-weight: 600; color: var(--text-dim); }
-  input, select, textarea {
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); border-radius: 7px; padding: .6rem .85rem;
-    font-family: var(--mono); font-size: .85rem;
-    outline: none; transition: border .15s;
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .85rem 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: .35rem; }
+  label { font-size: .78rem; font-weight: 500; color: var(--text-2); }
+  input, select, textarea, .input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 7px;
+    padding: .55rem .8rem;
+    font-family: var(--sans); font-size: .87rem;
+    outline: none;
+    transition: border-color .12s, box-shadow .12s, background .12s;
+    width: 100%;
   }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 80px; font-family: var(--sans); }
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+  input:hover, select:hover, textarea:hover { border-color: var(--border-strong); }
+  input:focus, select:focus, textarea:focus, .input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  textarea { resize: vertical; min-height: 70px; font-family: var(--mono); font-size: .82rem; }
+  /* Para que textareas/inputs JSON usen mono */
+  textarea#r-props, textarea#r2-updates,
+  input[id^="upd-"], input[id^="f-"] { font-family: var(--mono); font-size: .83rem; }
+
+  /* checkbox label rows */
+  .check-row {
+    display: flex; gap: .75rem; flex-wrap: wrap; margin-top: .35rem;
+  }
+  .check-row label {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .85rem; color: var(--text); font-weight: 400;
+    padding: .4rem .7rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    cursor: pointer; transition: border-color .12s;
+  }
+  .check-row label:hover { border-color: var(--border-strong); }
+  .check-row input[type="checkbox"] { width: auto; accent-color: var(--accent); }
 
   /* ── BUTTONS ── */
   .btn {
-    display: inline-flex; align-items: center; gap: .5rem;
-    padding: .6rem 1.25rem; border-radius: 7px;
-    font-family: var(--sans); font-weight: 700; font-size: .85rem;
-    border: none; cursor: pointer; transition: all .15s;
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .55rem 1rem;
+    border-radius: 7px;
+    font-family: var(--sans); font-weight: 500; font-size: .85rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s, transform .08s;
     text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
   }
-  .btn-primary { background: var(--accent); color: var(--bg); }
-  .btn-primary:hover { opacity: .85; transform: translateY(-1px); }
-  .btn-danger { background: var(--accent2); color: #fff; }
-  .btn-danger:hover { opacity: .85; }
-  .btn-success { background: var(--accent3); color: var(--bg); }
-  .btn-success:hover { opacity: .85; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-sm { padding: .35rem .8rem; font-size: .8rem; }
-  .btn-row { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #0b0f17; font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-danger { background: var(--danger); color: #1a0a0a; font-weight: 600; }
+  .btn-danger:hover { background: #fa8b8b; }
+  .btn-success { background: var(--success); color: #0a1f12; font-weight: 600; }
+  .btn-success:hover { background: #6be598; }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--text-2); }
+  .btn-ghost:hover { border-color: var(--border-strong); color: var(--text); background: rgba(255,255,255,.02); }
+  .btn-sm { padding: .4rem .75rem; font-size: .8rem; }
+  .btn-row { display: flex; gap: .55rem; margin-top: 1.1rem; flex-wrap: wrap; }
+
+  /* inline action bar above tables */
+  .inline-actions { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; padding: .75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+  .inline-actions input { width: auto; min-width: 140px; }
 
   /* ── TABLE ── */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-  th { text-align: left; padding: .7rem 1rem; font-family: var(--mono); font-size: .7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
-  td { padding: .7rem 1rem; border-bottom: 1px solid rgba(30,45,61,.5); }
-  tr:hover td { background: rgba(0,212,255,.03); }
-  .badge {
-    display: inline-block; padding: .15rem .55rem; border-radius: 4px;
-    font-family: var(--mono); font-size: .7rem; font-weight: 600;
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  .table-wrap::-webkit-scrollbar { height: 8px; }
+  .table-wrap::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  th {
+    text-align: left; padding: .7rem 1rem;
+    font-size: .7rem; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: .04em; font-weight: 600;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
   }
-  .badge-green { background: rgba(46,213,115,.15); color: var(--accent3); }
-  .badge-red { background: rgba(255,71,87,.15); color: var(--accent2); }
-  .badge-cyan { background: rgba(0,212,255,.15); color: var(--accent); }
-  .badge-yellow { background: rgba(255,165,2,.15); color: var(--accent4); }
+  td { padding: .7rem 1rem; border-bottom: 1px solid var(--border); color: var(--text); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(110,142,251,.04); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: .25rem;
+    padding: .15rem .55rem; border-radius: 5px;
+    font-family: var(--mono); font-size: .7rem; font-weight: 500;
+    letter-spacing: .01em;
+  }
+  .badge-green { background: var(--success-soft); color: var(--success); }
+  .badge-red { background: var(--danger-soft); color: var(--danger); }
+  .badge-cyan { background: var(--accent-soft); color: var(--accent); }
+  .badge-yellow { background: var(--warning-soft); color: var(--warning); }
+  .badge-gray { background: rgba(255,255,255,.05); color: var(--text-2); }
 
   /* ── FILTERS BAR ── */
-  .filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: flex-end; }
+  .filters {
+    display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.1rem;
+    align-items: flex-end;
+    padding: .85rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
   .filters .form-group { flex: 1; min-width: 150px; }
 
-  /* ── FRAUD ALERT ── */
+  /* ── ALERT (subtle) ── */
   .alert-card {
-    background: linear-gradient(135deg, rgba(255,71,87,.08), rgba(255,71,87,.02));
-    border: 1px solid rgba(255,71,87,.3); border-radius: 10px;
-    padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    background: var(--danger-soft);
+    border: 1px solid rgba(248,113,113,.25);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1rem;
   }
-  .alert-header { display: flex; align-items: center; gap: .5rem; font-weight: 700; color: var(--accent2); margin-bottom: .5rem; }
-  .alert-body { font-size: .85rem; color: var(--text-dim); }
+  .alert-header {
+    display: flex; align-items: center; gap: .5rem;
+    font-weight: 600; color: var(--danger);
+    margin-bottom: .35rem; font-size: .9rem;
+  }
+  .alert-body { font-size: .85rem; color: var(--text-2); line-height: 1.55; }
+  .alert-body strong { color: var(--text); font-weight: 600; }
 
   /* ── TOAST ── */
   #toast {
-    position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999;
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 1rem 1.5rem;
-    font-size: .9rem; min-width: 280px;
-    transform: translateY(120%); transition: transform .25s ease;
-    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    border-radius: 8px; padding: .85rem 1.15rem;
+    font-size: .87rem; min-width: 260px; max-width: 380px;
+    transform: translateY(140%); transition: transform .25s ease, opacity .2s;
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    display: flex; align-items: center; gap: .65rem;
+    color: var(--text);
   }
   #toast.show { transform: translateY(0); }
-  #toast.success { border-color: var(--accent3); }
-  #toast.error { border-color: var(--accent2); }
+  #toast.success { border-color: rgba(74,222,128,.35); }
+  #toast.success .ico { color: var(--success); }
+  #toast.error { border-color: rgba(248,113,113,.35); }
+  #toast.error .ico { color: var(--danger); }
 
   /* ── LOADING ── */
-  .loading { display: flex; align-items: center; gap: .75rem; color: var(--text-dim); font-family: var(--mono); font-size: .85rem; padding: 2rem; }
-  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  .loading { display: flex; align-items: center; gap: .65rem; color: var(--text-dim); font-size: .85rem; padding: 2rem; justify-content: center; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ── UPLOAD ZONE ── */
   .upload-zone {
-    border: 2px dashed var(--border); border-radius: 10px;
-    padding: 2.5rem; text-align: center; cursor: pointer;
-    transition: border .2s;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--bg);
   }
-  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
   .upload-zone input { display: none; }
-  .upload-icon { font-size: 2.5rem; margin-bottom: .75rem; }
-  .upload-text { color: var(--text-dim); font-size: .9rem; }
+  .upload-zone .ico-xl { color: var(--text-dim); margin-bottom: .65rem; }
+  .upload-zone:hover .ico-xl { color: var(--accent); }
+  .upload-text { color: var(--text-2); font-size: .9rem; }
+  .upload-text strong { color: var(--text); font-weight: 600; }
+
+  /* ── EMPTY STATE / CHIPS ── */
+  .empty-state {
+    text-align: center; padding: 2.5rem 1rem;
+    color: var(--text-dim); font-size: .87rem;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+  .chip-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .chip {
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 5px; padding: .15rem .55rem;
+    font-family: var(--mono); font-size: .7rem; font-weight: 500;
+  }
+  hr.sep { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+  /* result panels (for property/label add results) */
+  .result-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    margin-top: 1rem;
+    font-size: .85rem;
+  }
+  .result-card.success { border-color: rgba(74,222,128,.35); background: var(--success-soft); }
+  .result-card.danger { border-color: rgba(248,113,113,.35); background: var(--danger-soft); }
+  .result-card .result-title {
+    display: flex; align-items: center; gap: .45rem;
+    font-weight: 600; margin-bottom: .4rem;
+  }
+  .result-card.success .result-title { color: var(--success); }
+  .result-card.danger .result-title { color: var(--danger); }
+  .result-card .result-body {
+    font-family: var(--mono); font-size: .8rem; color: var(--text-2);
+    display: grid; gap: .15rem;
+  }
+  .result-card .result-body span.k { color: var(--text-dim); margin-right: .35rem; }
+
+  /* cypher block */
+  .cypher-block {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.15rem;
+    font-family: var(--mono); font-size: .82rem; color: var(--text-2);
+    line-height: 1.7;
+  }
+  .cypher-block .cypher-label { color: var(--accent); margin-bottom: .5rem; font-weight: 500; }
+
+  /* relations description table — softer */
+  #relaciones-descripcion { width: 100%; border-collapse: collapse; font-size: .85rem; }
+  #relaciones-descripcion td { padding: .6rem .9rem; border-bottom: 1px solid var(--border); }
+  #relaciones-descripcion tr:first-child td { background: var(--surface); color: var(--text-dim); font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
 
   /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    nav { display: none; }
-    main { padding: 1rem; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) {
+    nav { width: 64px; padding: 1rem .35rem; }
+    nav .section-label { display: none; }
+    nav a { justify-content: center; padding: .65rem .5rem; gap: 0; }
+    nav a span:not(.ico-wrap) { display: none; }
+    main { padding: 1.25rem 1rem; }
   }
-
-  .empty-state { text-align: center; padding: 3rem; color: var(--text-dim); font-family: var(--mono); font-size: .85rem; }
-  .chip-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
-  .chip { background: rgba(0,212,255,.1); color: var(--accent); border-radius: 4px; padding: .2rem .6rem; font-family: var(--mono); font-size: .7rem; }
-  hr.sep { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    main { padding: 1rem .85rem; }
+    header { padding: 0 1rem; }
+  }
 </style>
 </head>
 <body>
 
+<!-- ── ICON SPRITE (Lucide-style) ── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-bank" viewBox="0 0 24 24"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+    <symbol id="i-device" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+    <symbol id="i-circle" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M2.5 22v-6h6"/><path d="M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  </defs>
+</svg>
+
 <header>
   <div class="logo">
-    <div class="logo-icon">🛡</div>
+    <div class="logo-icon"><svg class="ico ico-lg"><use href="#i-shield"/></svg></div>
     <div class="logo-text">Fraud<span>Shield</span></div>
   </div>
-  <div class="status-dot">
-    <div class="dot"></div>
+  <div class="status-pill">
+    <div class="dot" id="conn-dot"></div>
     <span id="conn-status">Conectando...</span>
   </div>
 </header>
 
 <div class="shell">
   <nav>
-    <div class="section-label">Dashboard</div>
-    <a class="active" data-view="dashboard"><span class="icon">📊</span> Inicio</a>
-    <a data-view="fraude"><span class="icon">🚨</span> Alertas Fraude</a>
+    <div class="section-label">Panel</div>
+    <a class="active" data-view="dashboard"><svg class="ico"><use href="#i-home"/></svg><span>Inicio</span></a>
+    <a data-view="fraude"><svg class="ico"><use href="#i-alert"/></svg><span>Alertas Fraude</span></a>
 
     <div class="section-label">CRUD Nodos</div>
-    <a data-view="usuarios"><span class="icon">👤</span> Usuarios</a>
-    <a data-view="cuentas"><span class="icon">🏦</span> Cuentas</a>
-    <a data-view="transacciones"><span class="icon">💸</span> Transacciones</a>
-    <a data-view="dispositivos"><span class="icon">📱</span> Dispositivos</a>
-    <a data-view="ubicaciones"><span class="icon">📍</span> Ubicaciones</a>
+    <a data-view="usuarios"><svg class="ico"><use href="#i-user"/></svg><span>Usuarios</span></a>
+    <a data-view="cuentas"><svg class="ico"><use href="#i-bank"/></svg><span>Cuentas</span></a>
+    <a data-view="transacciones"><svg class="ico"><use href="#i-money"/></svg><span>Transacciones</span></a>
+    <a data-view="dispositivos"><svg class="ico"><use href="#i-device"/></svg><span>Dispositivos</span></a>
+    <a data-view="ubicaciones"><svg class="ico"><use href="#i-pin"/></svg><span>Ubicaciones</span></a>
 
     <div class="section-label">Operaciones</div>
-    <a data-view="relaciones"><span class="icon">🔗</span> Relaciones</a>
-    <a data-view="cargar-csv"><span class="icon">📂</span> Cargar CSV</a>
-    <a data-view="estadisticas"><span class="icon">📈</span> Estadísticas</a>
+    <a data-view="relaciones"><svg class="ico"><use href="#i-link"/></svg><span>Relaciones</span></a>
+    <a data-view="cargar-csv"><svg class="ico"><use href="#i-upload"/></svg><span>Cargar CSV</span></a>
+    <a data-view="estadisticas"><svg class="ico"><use href="#i-chart"/></svg><span>Estadísticas</span></a>
 
-    <div class="section-label">Gestión Avanzada</div>
-    <a data-view="propiedades-nodos"><span class="icon">⚙️</span> Gestión de Propiedades</a>
-    <a data-view="labels"><span class="icon">🏷️</span> Gestión de Labels</a>
-    <a data-view="grafo-integridad"><span class="icon">✓</span> Integridad del Grafo</a>
-    <a data-view="relaciones-info"><span class="icon">ℹ️</span> Tipos de Relaciones</a>
-    <a data-view="propiedades-nodos-bulk"><span class="icon">📦</span> Propiedades Bulk (Nodos)</a>
-    <a data-view="propiedades-relaciones-bulk"><span class="icon">🔗</span> Propiedades Bulk (Relaciones)</a>
+    <div class="section-label">Avanzado</div>
+    <a data-view="propiedades-nodos"><svg class="ico"><use href="#i-sliders"/></svg><span>Propiedades de Nodos</span></a>
+    <a data-view="labels"><svg class="ico"><use href="#i-tag"/></svg><span>Labels</span></a>
+    <a data-view="grafo-integridad"><svg class="ico"><use href="#i-check"/></svg><span>Integridad del Grafo</span></a>
+    <a data-view="relaciones-info"><svg class="ico"><use href="#i-info"/></svg><span>Tipos de Relaciones</span></a>
+    <a data-view="propiedades-nodos-bulk"><svg class="ico"><use href="#i-box"/></svg><span>Propiedades Bulk (Nodos)</span></a>
+    <a data-view="propiedades-relaciones-bulk"><svg class="ico"><use href="#i-box"/></svg><span>Propiedades Bulk (Rel.)</span></a>
   </nav>
 
   <main>
     <!-- ══ DASHBOARD ══ -->
     <div id="v-dashboard" class="view active">
       <h1>Sistema de Detección de Fraude</h1>
-      <p class="subtitle">// Neo4j Graph Database · Universidad del Valle de Guatemala · CC3089</p>
+      <p class="subtitle">Neo4j Graph Database · Universidad del Valle de Guatemala · CC3089</p>
       <div class="stats-grid" id="stats-grid">
         <div class="loading"><div class="spinner"></div>Cargando métricas...</div>
       </div>
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">Transacciones por Tipo</div>
+          <div class="panel-title"><svg class="ico"><use href="#i-chart"/></svg>Transacciones por Tipo</div>
           <span class="panel-tag">AGREGACIÓN</span>
         </div>
         <div id="tipo-table" class="table-wrap">
@@ -291,12 +499,12 @@
     <!-- ══ ALERTAS DE FRAUDE ══ -->
     <div id="v-fraude" class="view">
       <h1>Alertas de Fraude</h1>
-      <p class="subtitle">// Patrones sospechosos detectados mediante Cypher queries</p>
+      <p class="subtitle">Patrones sospechosos detectados mediante Cypher queries</p>
 
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">🔴 Transacciones Fraudulentas</div>
-          <button class="btn btn-danger btn-sm" onclick="loadFraudeTransacciones()">Actualizar</button>
+          <div class="panel-title"><svg class="ico" style="color:var(--danger)"><use href="#i-alert"/></svg>Transacciones Fraudulentas</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadFraudeTransacciones()"><svg class="ico ico-sm"><use href="#i-refresh"/></svg>Actualizar</button>
         </div>
         <div id="fraude-txn-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div></div>
@@ -305,7 +513,7 @@
 
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">⚠️ Dispositivos Compartidos</div>
+          <div class="panel-title"><svg class="ico" style="color:var(--warning)"><use href="#i-warning"/></svg>Dispositivos Compartidos</div>
           <span class="panel-tag red">SOSPECHOSO</span>
         </div>
         <div id="disp-compartido-table" class="table-wrap">
@@ -315,7 +523,7 @@
 
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">🔄 Transferencias Circulares</div>
+          <div class="panel-title"><svg class="ico" style="color:var(--warning)"><use href="#i-circle"/></svg>Transferencias Circulares</div>
           <span class="panel-tag red">LOOP DETECTADO</span>
         </div>
         <div id="circular-table" class="table-wrap">
@@ -325,7 +533,7 @@
 
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">👥 Usuarios de Alto Riesgo</div>
+          <div class="panel-title"><svg class="ico" style="color:var(--danger)"><use href="#i-users"/></svg>Usuarios de Alto Riesgo</div>
           <span class="panel-tag red">TOP RIESGO</span>
         </div>
         <div id="riesgo-table" class="table-wrap">
@@ -337,7 +545,7 @@
     <!-- ══ USUARIOS ══ -->
     <div id="v-usuarios" class="view">
       <h1>Gestión de Usuarios</h1>
-      <p class="subtitle">// CREATE · READ · UPDATE · DELETE</p>
+      <p class="subtitle">CREATE · READ · UPDATE · DELETE</p>
 
       <!-- Crear usuario -->
       <div class="panel">
@@ -376,21 +584,15 @@
         </div>
         <div class="form-group" style="margin-top:1rem">
           <label>Labels extra (nodo con 2+ labels)</label>
-          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem">
-            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
-              <input type="checkbox" value="ClienteVIP" class="u-label-extra"> ClienteVIP
-            </label>
-            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
-              <input type="checkbox" value="Sospechoso" class="u-label-extra"> Sospechoso
-            </label>
-            <label style="font-size:.85rem;display:flex;align-items:center;gap:.3rem;color:var(--text)">
-              <input type="checkbox" value="Corporativo" class="u-label-extra"> Corporativo
-            </label>
+          <div class="check-row">
+            <label><input type="checkbox" value="ClienteVIP" class="u-label-extra"> ClienteVIP</label>
+            <label><input type="checkbox" value="Sospechoso" class="u-label-extra"> Sospechoso</label>
+            <label><input type="checkbox" value="Corporativo" class="u-label-extra"> Corporativo</label>
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="crearUsuario()">➕ Crear Usuario (1 label)</button>
-          <button class="btn btn-success" onclick="crearUsuarioMultiLabel()">🏷 Crear con Multi-Label</button>
+          <button class="btn btn-primary" onclick="crearUsuario()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Crear Usuario</button>
+          <button class="btn btn-ghost" onclick="crearUsuarioMultiLabel()"><svg class="ico ico-sm"><use href="#i-tag"/></svg>Crear con Multi-Label</button>
         </div>
       </div>
 
@@ -413,19 +615,19 @@
               <option value="false">Inactivo</option>
             </select>
           </div>
-          <div class="form-group" style="justify-content:flex-end">
+          <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadUsuarios()">🔍 Filtrar</button>
+            <button class="btn btn-ghost" onclick="loadUsuarios()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
 
         <!-- UPDATE/DELETE form inline -->
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
-          <input id="upd-u-id" type="number" placeholder="ID Usuario" style="width:130px">
-          <input id="upd-u-campo" type="text" placeholder="Campo (ej: estado)" style="width:160px">
-          <input id="upd-u-valor" type="text" placeholder="Nuevo valor" style="width:160px">
-          <button class="btn btn-primary btn-sm" onclick="actualizarUsuario()">✏️ Actualizar</button>
-          <button class="btn btn-danger btn-sm" onclick="eliminarUsuario()">🗑 Eliminar</button>
+        <div class="inline-actions">
+          <input id="upd-u-id" type="number" placeholder="ID Usuario" style="max-width:130px">
+          <input id="upd-u-campo" type="text" placeholder="Campo (ej: estado)" style="max-width:160px">
+          <input id="upd-u-valor" type="text" placeholder="Nuevo valor" style="max-width:160px">
+          <button class="btn btn-primary btn-sm" onclick="actualizarUsuario()"><svg class="ico ico-sm"><use href="#i-edit"/></svg>Actualizar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarUsuario()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
         </div>
 
         <div id="usuarios-table" class="table-wrap">
@@ -437,7 +639,7 @@
     <!-- ══ CUENTAS ══ -->
     <div id="v-cuentas" class="view">
       <h1>Gestión de Cuentas</h1>
-      <p class="subtitle">// Cuentas bancarias vinculadas a usuarios</p>
+      <p class="subtitle">Cuentas bancarias vinculadas a usuarios</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -476,7 +678,7 @@
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="crearCuenta()">➕ Crear Cuenta</button>
+          <button class="btn btn-primary" onclick="crearCuenta()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Crear Cuenta</button>
         </div>
       </div>
 
@@ -498,17 +700,17 @@
             <label>Saldo máximo</label>
             <input id="f-c-max" type="number" placeholder="999999">
           </div>
-          <div class="form-group" style="justify-content:flex-end">
+          <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadCuentas()">🔍 Filtrar</button>
+            <button class="btn btn-ghost" onclick="loadCuentas()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
-          <input id="upd-c-id" type="number" placeholder="ID Cuenta" style="width:130px">
-          <input id="upd-c-campo" type="text" placeholder="Campo" style="width:140px">
-          <input id="upd-c-valor" type="text" placeholder="Nuevo valor" style="width:150px">
-          <button class="btn btn-primary btn-sm" onclick="actualizarCuenta()">✏️ Actualizar</button>
-          <button class="btn btn-danger btn-sm" onclick="eliminarCuenta()">🗑 Eliminar</button>
+        <div class="inline-actions">
+          <input id="upd-c-id" type="number" placeholder="ID Cuenta" style="max-width:130px">
+          <input id="upd-c-campo" type="text" placeholder="Campo" style="max-width:140px">
+          <input id="upd-c-valor" type="text" placeholder="Nuevo valor" style="max-width:150px">
+          <button class="btn btn-primary btn-sm" onclick="actualizarCuenta()"><svg class="ico ico-sm"><use href="#i-edit"/></svg>Actualizar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarCuenta()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
         </div>
         <div id="cuentas-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div>Cargando cuentas...</div>
@@ -519,7 +721,7 @@
     <!-- ══ TRANSACCIONES ══ -->
     <div id="v-transacciones" class="view">
       <h1>Transacciones</h1>
-      <p class="subtitle">// Flujos de dinero entre cuentas</p>
+      <p class="subtitle">Flujos de dinero entre cuentas</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -573,7 +775,7 @@
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="crearTransaccion()">➕ Registrar Transacción</button>
+          <button class="btn btn-primary" onclick="crearTransaccion()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Registrar Transacción</button>
         </div>
       </div>
 
@@ -600,15 +802,15 @@
             <label>Monto mín</label>
             <input id="f-t-min" type="number" placeholder="0">
           </div>
-          <div class="form-group" style="justify-content:flex-end">
+          <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadTransacciones()">🔍 Filtrar</button>
+            <button class="btn btn-ghost" onclick="loadTransacciones()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
-        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
-          <input id="upd-t-id" type="number" placeholder="ID Transacción" style="width:160px">
-          <button class="btn btn-danger btn-sm" onclick="eliminarTransaccion()">🗑 Eliminar</button>
-          <button class="btn btn-primary btn-sm" onclick="marcarFraudulenta()">⚠️ Marcar como Fraudulenta</button>
+        <div class="inline-actions">
+          <input id="upd-t-id" type="number" placeholder="ID Transacción" style="max-width:160px">
+          <button class="btn btn-danger btn-sm" onclick="eliminarTransaccion()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
+          <button class="btn btn-ghost btn-sm" onclick="marcarFraudulenta()" style="color:var(--warning);border-color:rgba(251,191,36,.35)"><svg class="ico ico-sm"><use href="#i-warning"/></svg>Marcar como Fraudulenta</button>
         </div>
         <div id="transacciones-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div>Cargando transacciones...</div>
@@ -619,7 +821,7 @@
     <!-- ══ DISPOSITIVOS ══ -->
     <div id="v-dispositivos" class="view">
       <h1>Dispositivos</h1>
-      <p class="subtitle">// Dispositivos registrados en el sistema</p>
+      <p class="subtitle">Dispositivos registrados en el sistema</p>
       <div class="panel">
         <div class="filters">
           <div class="form-group">
@@ -629,9 +831,9 @@
               <option>Móvil</option><option>Computadora</option><option>Tablet</option><option>ATM</option><option>POS</option>
             </select>
           </div>
-          <div class="form-group" style="justify-content:flex-end">
+          <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadDispositivos()">🔍 Buscar</button>
+            <button class="btn btn-ghost" onclick="loadDispositivos()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Buscar</button>
           </div>
         </div>
         <div id="dispositivos-table" class="table-wrap">
@@ -643,10 +845,10 @@
     <!-- ══ UBICACIONES ══ -->
     <div id="v-ubicaciones" class="view">
       <h1>Ubicaciones</h1>
-      <p class="subtitle">// Ubicaciones geográficas registradas</p>
+      <p class="subtitle">Ubicaciones geográficas registradas</p>
       <div class="panel">
         <div class="btn-row" style="margin-top:0;margin-bottom:1rem">
-          <button class="btn btn-ghost" onclick="loadUbicaciones()">🔄 Cargar Ubicaciones</button>
+          <button class="btn btn-primary" onclick="loadUbicaciones()"><svg class="ico ico-sm"><use href="#i-refresh"/></svg>Cargar Ubicaciones</button>
         </div>
         <div id="ubicaciones-table" class="table-wrap">
           <div class="empty-state">Haz clic en Cargar Ubicaciones</div>
@@ -657,7 +859,7 @@
     <!-- ══ RELACIONES ══ -->
     <div id="v-relaciones" class="view">
       <h1>Gestión de Relaciones</h1>
-      <p class="subtitle">// Crear, actualizar y eliminar relaciones entre nodos</p>
+      <p class="subtitle">Crear, actualizar y eliminar relaciones entre nodos</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -701,7 +903,7 @@
           <textarea id="r-props" rows="3">{"fecha": "2025-01-01", "activo": true, "tipo_relacion": "Titular"}</textarea>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="crearRelacion()">🔗 Crear Relación</button>
+          <button class="btn btn-primary" onclick="crearRelacion()"><svg class="ico ico-sm"><use href="#i-link"/></svg>Crear Relación</button>
         </div>
       </div>
 
@@ -742,8 +944,8 @@
           <textarea id="r2-updates" rows="2">{"activo": false}</textarea>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="actualizarRelacion()">✏️ Actualizar Relación</button>
-          <button class="btn btn-danger" onclick="eliminarRelacion()">🗑 Eliminar Relación</button>
+          <button class="btn btn-primary" onclick="actualizarRelacion()"><svg class="ico ico-sm"><use href="#i-edit"/></svg>Actualizar</button>
+          <button class="btn btn-danger" onclick="eliminarRelacion()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
         </div>
       </div>
     </div>
@@ -751,11 +953,11 @@
     <!-- ══ CARGAR CSV ══ -->
     <div id="v-cargar-csv" class="view">
       <h1>Cargar Datos CSV</h1>
-      <p class="subtitle">// Importar nuevos nodos desde archivo CSV</p>
+      <p class="subtitle">Importar nuevos nodos desde archivo CSV</p>
 
       <div class="panel">
-        <div class="alert-card">
-          <div class="alert-header">📋 Formato requerido</div>
+        <div class="alert-card" style="background:var(--accent-soft);border-color:rgba(110,142,251,.25)">
+          <div class="alert-header" style="color:var(--accent)"><svg class="ico"><use href="#i-info"/></svg>Formato requerido</div>
           <div class="alert-body">
             <strong>Usuarios:</strong> id_usuario, nombre, email, fecha_registro, estado, telefono, ocupacion, score_credito<br>
             <strong>Cuentas:</strong> id_cuenta, tipo, saldo, fecha_creacion, estado, moneda, limite_diario<br>
@@ -772,12 +974,12 @@
         </div>
         <div class="upload-zone" onclick="document.getElementById('csv-file').click()" style="margin-top:1rem">
           <input type="file" id="csv-file" accept=".csv" onchange="previewCSV(this)">
-          <div class="upload-icon">📂</div>
-          <div class="upload-text">Haz clic para seleccionar archivo CSV</div>
+          <svg class="ico ico-xl"><use href="#i-upload"/></svg>
+          <div class="upload-text"><strong>Haz clic para seleccionar</strong> un archivo CSV</div>
           <div id="csv-preview" style="margin-top:.75rem;font-family:var(--mono);font-size:.8rem;color:var(--accent)"></div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="cargarCSV()">⬆️ Importar Nodos</button>
+          <button class="btn btn-primary" onclick="cargarCSV()"><svg class="ico ico-sm"><use href="#i-upload"/></svg>Importar Nodos</button>
         </div>
       </div>
     </div>
@@ -785,10 +987,10 @@
     <!-- ══ ESTADÍSTICAS ══ -->
     <div id="v-estadisticas" class="view">
       <h1>Estadísticas y Agregaciones</h1>
-      <p class="subtitle">// Consultas agregadas sobre el grafo</p>
+      <p class="subtitle">Consultas agregadas sobre el grafo</p>
       <div class="panel">
         <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
-          <button class="btn btn-primary" onclick="loadEstadisticasTipo()">📊 Cargar Datos</button>
+          <button class="btn btn-primary" onclick="loadEstadisticasTipo()"><svg class="ico ico-sm"><use href="#i-chart"/></svg>Cargar Datos</button>
         </div>
         <div id="estadisticas-content">
           <div class="empty-state">Haz clic en Cargar Datos</div>
@@ -799,7 +1001,7 @@
     <!-- ══ GESTIÓN DE PROPIEDADES DE NODOS ══ -->
     <div id="v-propiedades-nodos" class="view">
       <h1>Gestión de Propiedades en Nodos</h1>
-      <p class="subtitle">// Agregar o eliminar propiedades a nodos existentes</p>
+      <p class="subtitle">Agregar o eliminar propiedades a nodos existentes</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -818,7 +1020,7 @@
           <input type="number" id="prop-id" placeholder="ID del nodo" class="input">
           <input type="text" id="prop-nombre" placeholder="Nombre de propiedad" class="input">
           <input type="text" id="prop-valor" placeholder="Valor" class="input">
-          <button class="btn btn-primary" onclick="agregarPropiedad()">➕ Agregar</button>
+          <button class="btn btn-primary" onclick="agregarPropiedad()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar</button>
           <div id="prop-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -839,7 +1041,7 @@
           </select>
           <input type="number" id="prop-del-id" placeholder="ID del nodo" class="input">
           <textarea id="prop-del-props" placeholder="Propiedades (separadas por comas): prop1,prop2" class="input" rows="3"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedades()">🗑️ Eliminar</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedades()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
           <div id="prop-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -848,7 +1050,7 @@
     <!-- ══ GESTIÓN DE LABELS ══ -->
     <div id="v-labels" class="view">
       <h1>Gestión de Labels en Nodos</h1>
-      <p class="subtitle">// Agregar labels adicionales a nodos existentes</p>
+      <p class="subtitle">Agregar labels adicionales a nodos existentes</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -866,7 +1068,7 @@
           </select>
           <input type="number" id="label-id" placeholder="ID del nodo" class="input">
           <input type="text" id="label-nombres" placeholder="Labels a agregar (separados por comas): ClienteVIP,Sospechoso" class="input">
-          <button class="btn btn-primary" onclick="agregarLabels()">🏷️ Agregar Labels</button>
+          <button class="btn btn-primary" onclick="agregarLabels()"><svg class="ico ico-sm"><use href="#i-tag"/></svg>Agregar Labels</button>
           <div id="label-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -875,31 +1077,31 @@
     <!-- ══ INTEGRIDAD DEL GRAFO ══ -->
     <div id="v-grafo-integridad" class="view">
       <h1>Verificación de Integridad del Grafo</h1>
-      <p class="subtitle">// Validar que el grafo es conexo (todos los nodos conectados)</p>
+      <p class="subtitle">Validar que el grafo es conexo (todos los nodos conectados)</p>
 
       <div class="panel">
         <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
-          <button class="btn btn-primary" onclick="verificarGrafoConexo()">🔍 Verificar Conexidad</button>
+          <button class="btn btn-primary" onclick="verificarGrafoConexo()"><svg class="ico ico-sm"><use href="#i-check"/></svg>Verificar Conexidad</button>
         </div>
         <div id="grafo-resultado" class="empty-state">Haz clic en Verificar Conexidad</div>
       </div>
 
       <div class="stats-grid" id="grafo-stats" style="display:none;">
-        <div class="stat">
-          <div class="stat-value" id="total-nodos-valor">-</div>
+        <div class="stat-card">
           <div class="stat-label">Total de Nodos</div>
+          <div class="stat-value" id="total-nodos-valor">-</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="nodos-conectados-valor">-</div>
+        <div class="stat-card">
           <div class="stat-label">Nodos Conectados</div>
+          <div class="stat-value" id="nodos-conectados-valor">-</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="porcentaje-conexo-valor">-</div>
+        <div class="stat-card">
           <div class="stat-label">% Conectado</div>
+          <div class="stat-value" id="porcentaje-conexo-valor">-</div>
         </div>
-        <div class="stat">
-          <div class="stat-value" id="es-conexo-valor" style="color:var(--accent3);">-</div>
+        <div class="stat-card">
           <div class="stat-label">Es Conexo</div>
+          <div class="stat-value" id="es-conexo-valor" style="color:var(--success);">-</div>
         </div>
       </div>
     </div>
@@ -907,11 +1109,11 @@
     <!-- ══ INFORMACIÓN DE RELACIONES ══ -->
     <div id="v-relaciones-info" class="view">
       <h1>Información de Tipos de Relaciones</h1>
-      <p class="subtitle">// Tipos de relaciones disponibles en el grafo</p>
+      <p class="subtitle">Tipos de relaciones disponibles en el grafo</p>
 
       <div class="panel">
         <div class="btn-row" style="margin-top:0;margin-bottom:1.5rem">
-          <button class="btn btn-primary" onclick="cargarTiposRelaciones()">🔗 Cargar Tipos</button>
+          <button class="btn btn-primary" onclick="cargarTiposRelaciones()"><svg class="ico ico-sm"><use href="#i-link"/></svg>Cargar Tipos</button>
         </div>
         <div id="relaciones-tipos-content">
           <div class="empty-state">Haz clic en Cargar Tipos</div>
@@ -923,8 +1125,8 @@
           <div class="panel-title">Descripción de Tipos de Relaciones</div>
           <span class="panel-tag">INFO</span>
         </div>
-        <table class="table" id="relaciones-descripcion">
-          <tr style="background:var(--card);font-weight:600;">
+        <table id="relaciones-descripcion">
+          <tr>
             <td>Tipo</td>
             <td>De</td>
             <td>A</td>
@@ -946,8 +1148,8 @@
 
     <!-- ══ GESTIÓN BULK DE PROPIEDADES EN NODOS ══ -->
     <div id="v-propiedades-nodos-bulk" class="view">
-      <h1>Gestión de Propiedades - Operaciones Bulk (Nodos)</h1>
-      <p class="subtitle">// Agregar o eliminar propiedades a múltiples nodos simultáneamente</p>
+      <h1>Gestión de Propiedades — Bulk (Nodos)</h1>
+      <p class="subtitle">Agregar o eliminar propiedades a múltiples nodos simultáneamente</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -965,7 +1167,7 @@
           </select>
           <textarea id="bulk-prop-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
           <textarea id="bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="3"></textarea>
-          <button class="btn btn-primary" onclick="agregarPropiedadesMultiples()">➕ Agregar a Múltiples</button>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar a Múltiples</button>
           <div id="bulk-prop-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -986,7 +1188,7 @@
           </select>
           <textarea id="bulk-del-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
           <textarea id="bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas): prop1,prop2" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiples()">🗑️ Eliminar de Múltiples</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples</button>
           <div id="bulk-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -994,8 +1196,8 @@
 
     <!-- ══ GESTIÓN BULK DE PROPIEDADES EN RELACIONES ══ -->
     <div id="v-propiedades-relaciones-bulk" class="view">
-      <h1>Gestión de Propiedades - Relaciones</h1>
-      <p class="subtitle">// Agregar o eliminar propiedades en una o múltiples relaciones</p>
+      <h1>Gestión de Propiedades — Relaciones</h1>
+      <p class="subtitle">Agregar o eliminar propiedades en una o múltiples relaciones</p>
 
       <div class="panel">
         <div class="panel-header">
@@ -1026,7 +1228,7 @@
           <input type="text" id="rel-prop-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
           <input type="text" id="rel-prop-nombre" placeholder="Nombre de la propiedad" class="input">
           <input type="text" id="rel-prop-valor" placeholder="Valor (número o texto)" class="input">
-          <button class="btn btn-primary" onclick="agregarPropiedadRelacion()">➕ Agregar</button>
+          <button class="btn btn-primary" onclick="agregarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar</button>
           <div id="rel-prop-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1059,7 +1261,7 @@
           </div>
           <input type="text" id="rel-del-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
           <textarea id="rel-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadRelacion()">🗑️ Eliminar</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
           <div id="rel-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1074,7 +1276,7 @@
           <input type="text" id="rel-bulk-prop-campo" placeholder="Campo de filtro (ej: activo)" class="input">
           <input type="text" id="rel-bulk-prop-valor" placeholder="Valor del filtro (ej: true)" class="input">
           <textarea id="rel-bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="2"></textarea>
-          <button class="btn btn-primary" onclick="agregarPropiedadesMultiplesRelaciones()">➕ Agregar a Múltiples</button>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar a Múltiples</button>
           <div id="rel-bulk-prop-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1089,7 +1291,7 @@
           <input type="text" id="rel-bulk-del-campo" placeholder="Campo de filtro (ej: activo)" class="input">
           <input type="text" id="rel-bulk-del-valor" placeholder="Valor del filtro (ej: false)" class="input">
           <textarea id="rel-bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiplesRelaciones()">🗑️ Eliminar de Múltiples</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples</button>
           <div id="rel-bulk-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1122,18 +1324,32 @@ document.querySelectorAll('nav a').forEach(a => {
 // ── TOAST ────────────────────────────────────────────────
 function toast(msg, type = 'success') {
   const t = document.getElementById('toast');
-  t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+  const iconId = type === 'success' ? '#i-check' : type === 'error' ? '#i-x' : '#i-info';
+  t.innerHTML = `<svg class="ico" aria-hidden="true"><use href="${iconId}"/></svg><span>${msg}</span>`;
   t.className = `show ${type}`;
-  setTimeout(() => t.className = '', 3000);
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(() => t.className = '', 3000);
 }
+// alias used in newer handlers
+const showToast = toast;
 
 // ── HEALTH CHECK ─────────────────────────────────────────
 async function checkHealth() {
+  const dot = document.getElementById('conn-dot');
   try {
     const r = await fetch(`${API}/health`);
     const d = await r.json();
-    document.getElementById('conn-status').textContent = d.success ? 'Neo4j Conectado' : 'Sin conexión';
-  } catch { document.getElementById('conn-status').textContent = 'Sin conexión al servidor'; }
+    if (d.success) {
+      document.getElementById('conn-status').textContent = 'Neo4j Conectado';
+      dot.classList.remove('off');
+    } else {
+      document.getElementById('conn-status').textContent = 'Sin conexión';
+      dot.classList.add('off');
+    }
+  } catch {
+    document.getElementById('conn-status').textContent = 'Sin conexión al servidor';
+    dot.classList.add('off');
+  }
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
@@ -1184,7 +1400,7 @@ async function loadFraudeTransacciones() {
   const { data } = await r.json();
   document.getElementById('fraude-txn-table').innerHTML = buildTable(data,
     ['id','tipo','monto','fecha','canal','usuario_origen','usuario_destino','pais'],
-    { monto: v => `<span style="color:var(--accent2)">Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}</span>` }
+    { monto: v => `<span style="color:var(--danger)">Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}</span>` }
   );
 }
 async function loadDispCompartido() {
@@ -1203,7 +1419,7 @@ async function loadCircular() {
     ? buildTable(data, ['cuenta_a','cuenta_b','monto_a_b','monto_b_a','fecha_ida','fecha_vuelta'],
         { monto_a_b: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
           monto_b_a: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}` })
-    : '<div class="empty-state">✅ No se detectaron transferencias circulares</div>';
+    : '<div class="empty-state">No se detectaron transferencias circulares</div>';
 }
 async function loadRiesgo() {
   const r = await fetch(`${API}/fraude/usuarios-riesgo`);
@@ -1229,7 +1445,7 @@ async function loadUsuarios() {
     ['id_usuario','nombre','email','ocupacion','score_credito','estado','num_cuentas','labels'],
     { estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activo':'Inactivo'}</span>`,
       labels: v => `<div class="chip-list">${(v||[]).map(l=>`<span class="chip">${l}</span>`).join('')}</div>`,
-      score_credito: v => `<span style="color:${v>700?'var(--accent3)':v>500?'var(--accent4)':'var(--accent2)'}">${v}</span>` }
+      score_credito: v => `<span style="color:${v>700?'var(--success)':v>500?'var(--warning)':'var(--danger)'}">${v}</span>` }
   );
 }
 
@@ -1279,7 +1495,7 @@ async function actualizarUsuario() {
   else if (!isNaN(valor)) v = Number(valor);
   const r = await fetch(`${API}/usuarios/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: v}) });
   const d = await r.json();
-  if (d.success) { toast('Usuario actualizado ✓'); loadUsuarios(); }
+  if (d.success) { toast('Usuario actualizado'); loadUsuarios(); }
   else toast(d.error, 'error');
 }
 
@@ -1325,7 +1541,7 @@ async function crearCuenta() {
   if (!body.id_usuario) return toast('ID de usuario requerido', 'error');
   const r = await fetch(`${API}/cuentas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const d = await r.json();
-  if (d.success) { toast('Cuenta creada ✓'); loadCuentas(); }
+  if (d.success) { toast('Cuenta creada'); loadCuentas(); }
   else toast(d.error, 'error');
 }
 
@@ -1338,7 +1554,7 @@ async function actualizarCuenta() {
   else if (!isNaN(valor)) valor = Number(valor);
   const r = await fetch(`${API}/cuentas/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: valor}) });
   const d = await r.json();
-  if (d.success) { toast('Cuenta actualizada ✓'); loadCuentas(); }
+  if (d.success) { toast('Cuenta actualizada'); loadCuentas(); }
   else toast(d.error, 'error');
 }
 
@@ -1385,7 +1601,7 @@ async function crearTransaccion() {
   if (!body.id_cuenta_origen || !body.id_cuenta_destino || !body.monto) return toast('Origen, destino y monto son requeridos', 'error');
   const r = await fetch(`${API}/transacciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const d = await r.json();
-  if (d.success) { toast('Transacción registrada ✓'); loadTransacciones(); }
+  if (d.success) { toast('Transacción registrada'); loadTransacciones(); }
   else toast(d.error, 'error');
 }
 
@@ -1403,7 +1619,7 @@ async function marcarFraudulenta() {
   if (!id) return toast('Ingresa el ID de la transacción', 'error');
   const r = await fetch(`${API}/transacciones/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({es_fraudulenta: true}) });
   const d = await r.json();
-  if (d.success) { toast('Marcada como fraudulenta ⚠️'); loadTransacciones(); }
+  if (d.success) { toast('Marcada como fraudulenta'); loadTransacciones(); }
   else toast(d.error, 'error');
 }
 
@@ -1415,7 +1631,9 @@ async function loadDispositivos() {
   const { data } = await r.json();
   document.getElementById('dispositivos-table').innerHTML = buildTable(data,
     ['id_dispositivo','tipo','ip','sistema_operativo','marca','ubicacion','verificado'],
-    { verificado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'✓':'✗'}</span>` }
+    { verificado: v => v
+      ? `<span class="badge badge-green"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-check"/></svg>Sí</span>`
+      : `<span class="badge badge-red"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-x"/></svg>No</span>` }
   );
 }
 
@@ -1443,7 +1661,7 @@ async function crearRelacion() {
   };
   const r = await fetch(`${API}/relaciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const d = await r.json();
-  if (d.success) toast('Relación creada ✓'); else toast(d.error, 'error');
+  if (d.success) toast('Relación creada'); else toast(d.error, 'error');
 }
 
 async function actualizarRelacion() {
@@ -1460,7 +1678,7 @@ async function actualizarRelacion() {
   };
   const r = await fetch(`${API}/relaciones/update`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
   const d = await r.json();
-  if (d.success) toast('Relación actualizada ✓'); else toast(d.error, 'error');
+  if (d.success) toast('Relación actualizada'); else toast(d.error, 'error');
 }
 
 async function eliminarRelacion() {
@@ -1500,7 +1718,7 @@ async function loadEstadisticasTipo() {
   const r = await fetch(`${API}/estadisticas/por-tipo`);
   const { data } = await r.json();
   const html = `
-    <h3 style="margin-bottom:1rem;font-size:1rem">Transacciones por Tipo (Consulta Agregada)</h3>
+    <h3 style="margin-bottom:1rem;font-size:1rem;font-weight:600">Transacciones por Tipo (Consulta Agregada)</h3>
     ${buildTable(data, ['tipo','total','monto_total','monto_promedio','fraudulentas'], {
       tipo: v => `<span class="badge badge-cyan">${v}</span>`,
       monto_total: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:0})}`,
@@ -1508,8 +1726,8 @@ async function loadEstadisticasTipo() {
       fraudulentas: v => `<span class="badge badge-red">${v}</span>`
     })}
     <hr class="sep">
-    <div style="background:var(--surface);border-radius:8px;padding:1rem;font-family:var(--mono);font-size:.8rem;color:var(--text-dim)">
-      <div style="color:var(--accent);margin-bottom:.5rem">// Cypher Query ejecutada:</div>
+    <div class="cypher-block">
+      <div class="cypher-label">Cypher Query ejecutada</div>
       MATCH (t:Transaccion)<br>
       RETURN t.tipo as tipo, count(t) as total,<br>
       &nbsp;&nbsp;sum(t.monto) as monto_total,<br>
@@ -1558,10 +1776,10 @@ async function agregarPropiedad() {
     if (result.success) {
       showToast('Propiedad agregada exitosamente', 'success');
       document.getElementById('prop-resultado').innerHTML = `
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ Propiedad agregada</div>
-          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
-            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>Propiedad agregada</div>
+          <div class="result-body">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span class="k">${k}:</span>${v}</div>`).join('')}
           </div>
         </div>
       `;
@@ -1595,10 +1813,10 @@ async function eliminarPropiedades() {
     if (result.success) {
       showToast('Propiedades eliminadas exitosamente', 'success');
       document.getElementById('prop-del-resultado').innerHTML = `
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ ${propiedades.length} propiedad(es) eliminada(s)</div>
-          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
-            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${propiedades.length} propiedad(es) eliminada(s)</div>
+          <div class="result-body">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span class="k">${k}:</span>${v}</div>`).join('')}
           </div>
         </div>
       `;
@@ -1632,10 +1850,10 @@ async function agregarLabels() {
     if (result.success) {
       showToast('Labels agregados exitosamente', 'success');
       document.getElementById('label-resultado').innerHTML = `
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ Labels actualizados</div>
-          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
-            <div><span style="color:var(--text-dim)">Labels:</span> ${result.data.labels.join(', ')}</div>
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>Labels actualizados</div>
+          <div class="result-body">
+            <div><span class="k">Labels:</span>${result.data.labels.join(', ')}</div>
           </div>
         </div>
       `;
@@ -1659,20 +1877,21 @@ async function verificarGrafoConexo() {
       document.getElementById('total-nodos-valor').textContent = datos.total_nodos;
       document.getElementById('nodos-conectados-valor').textContent = datos.nodos_conectados;
       document.getElementById('porcentaje-conexo-valor').textContent = datos.porcentaje_conectado;
-      document.getElementById('es-conexo-valor').textContent = datos.es_conexo ? '✓ SÍ' : '✗ NO';
-      document.getElementById('es-conexo-valor').style.color = datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)';
+      document.getElementById('es-conexo-valor').textContent = datos.es_conexo ? 'Sí' : 'No';
+      document.getElementById('es-conexo-valor').style.color = datos.es_conexo ? 'var(--success)' : 'var(--danger)';
 
       document.getElementById('grafo-resultado').innerHTML = `
-        <div style="background:${datos.es_conexo ? 'rgba(46,213,115,0.1)' : 'rgba(255,71,87,0.1)'};border:1px solid ${datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)'};border-radius:8px;padding:1rem">
-          <div style="font-weight:600;color:${datos.es_conexo ? 'var(--accent3)' : 'var(--accent2)'}">
-            ${datos.es_conexo ? '✓ El grafo es CONEXO' : '✗ El grafo NO es conexo'}
+        <div class="result-card ${datos.es_conexo ? 'success' : 'danger'}">
+          <div class="result-title">
+            <svg class="ico ico-sm"><use href="${datos.es_conexo ? '#i-check' : '#i-x'}"/></svg>
+            ${datos.es_conexo ? 'El grafo es CONEXO' : 'El grafo NO es conexo'}
           </div>
-          <div style="font-size:.9rem;margin-top:.5rem;color:var(--text-dim)">
+          <div style="font-size:.88rem;color:var(--text-2);margin-top:.25rem">
             ${datos.nodos_conectados} de ${datos.total_nodos} nodos conectados (${datos.porcentaje_conectado})
           </div>
         </div>
       `;
-      showToast(datos.es_conexo ? 'Grafo verificado exitosamente' : 'Existen nodos desconectados', datos.es_conexo ? 'success' : 'warning');
+      showToast(datos.es_conexo ? 'Grafo verificado exitosamente' : 'Existen nodos desconectados', datos.es_conexo ? 'success' : 'error');
     } else {
       showToast(result.error || 'Error al verificar', 'error');
     }
@@ -1735,8 +1954,8 @@ async function agregarPropiedadesMultiples() {
     if (result.success) {
       showToast(`${result.updated} nodos actualizados`, 'success');
       document.getElementById('bulk-prop-resultado').innerHTML = `
-        <div style="background:rgba(46,213,115,0.1);border:1px solid var(--accent3);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ ${result.updated} propiedades agregadas</div>
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} propiedades agregadas</div>
         </div>
       `;
       document.getElementById('bulk-prop-ids').value = '';
@@ -1771,8 +1990,8 @@ async function eliminarPropiedadesMultiples() {
     if (result.success) {
       showToast(`${result.updated} nodos actualizados`, 'success');
       document.getElementById('bulk-del-resultado').innerHTML = `
-        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas de ${result.updated} nodos</div>
+        <div class="result-card danger">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas de ${result.updated} nodos</div>
         </div>
       `;
       document.getElementById('bulk-del-ids').value = '';
@@ -1815,10 +2034,10 @@ async function agregarPropiedadRelacion() {
     if (result.success) {
       showToast('Propiedad agregada a relación', 'success');
       document.getElementById('rel-prop-resultado').innerHTML = `
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ Relación actualizada</div>
-          <div style="font-family:var(--mono);font-size:.85rem;margin-top:.5rem">
-            ${Object.entries(result.data).map(([k,v]) => `<div><span style="color:var(--text-dim)">${k}:</span> ${v}</div>`).join('')}
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>Relación actualizada</div>
+          <div class="result-body">
+            ${Object.entries(result.data).map(([k,v]) => `<div><span class="k">${k}:</span>${v}</div>`).join('')}
           </div>
         </div>
       `;
@@ -1858,8 +2077,8 @@ async function eliminarPropiedadRelacion() {
     if (result.success) {
       showToast(`${propiedades.length} propiedades eliminadas`, 'success');
       document.getElementById('rel-del-resultado').innerHTML = `
-        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas</div>
+        <div class="result-card danger">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas</div>
         </div>
       `;
       document.getElementById('rel-del-props').value = '';
@@ -1901,8 +2120,8 @@ async function agregarPropiedadesMultiplesRelaciones() {
     if (result.success) {
       showToast(`${result.updated} relaciones actualizadas`, 'success');
       document.getElementById('rel-bulk-prop-resultado').innerHTML = `
-        <div style="background:rgba(46,213,115,0.1);border:1px solid var(--accent3);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent3);font-weight:600">✓ ${result.updated} relaciones actualizadas</div>
+        <div class="result-card success">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} relaciones actualizadas</div>
         </div>
       `;
     } else {
@@ -1939,8 +2158,8 @@ async function eliminarPropiedadesMultiplesRelaciones() {
     if (result.success) {
       showToast(`${result.updated} relaciones actualizadas`, 'success');
       document.getElementById('rel-bulk-del-resultado').innerHTML = `
-        <div style="background:rgba(255,71,87,0.1);border:1px solid var(--accent2);border-radius:8px;padding:1rem;margin-top:1rem">
-          <div style="color:var(--accent2);font-weight:600">✓ ${propiedades.length} propiedades eliminadas de ${result.updated} relaciones</div>
+        <div class="result-card danger">
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas de ${result.updated} relaciones</div>
         </div>
       `;
     } else {
