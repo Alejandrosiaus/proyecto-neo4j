@@ -142,7 +142,7 @@ app.post('/api/usuarios/multi-label', async (req, res) => {
     const extraLabels = (labels_extra || []).map(l => `:${l}`).join('');
     const result = await session.run(
       `CREATE (u:Usuario${extraLabels} {
-        id_usuario: randomInteger() % 999999 + 100000,
+        id_usuario: toInteger(rand() * 900000) + 100000,
         nombre: $nombre,
         email: $email,
         fecha_registro: date($fecha_registro),
@@ -360,7 +360,7 @@ app.post('/api/cuentas', async (req, res) => {
     const result = await session.run(
       `MATCH (u:Usuario {id_usuario: $id_usuario})
        CREATE (c:Cuenta {
-         id_cuenta: randomInteger() % 999999 + 100000,
+         id_cuenta: toInteger(rand() * 900000) + 100000,
          tipo: $tipo,
          saldo: $saldo,
          fecha_creacion: date($fecha_creacion),
@@ -454,7 +454,7 @@ app.post('/api/transacciones', async (req, res) => {
        MATCH (d:Dispositivo {id_dispositivo: $id_dispositivo})
        MATCH (ub:Ubicacion {id_ubicacion: $id_ubicacion})
        CREATE (t:Transaccion {
-         id_transaccion: randomInteger() % 9999999 + 1000000,
+         id_transaccion: toInteger(rand() * 9000000) + 1000000,
          monto: $monto,
          fecha: date($fecha),
          tipo: $tipo,
