@@ -117,7 +117,7 @@ app.post('/api/usuarios', async (req, res) => {
     const { nombre, email, fecha_registro, estado, telefono, ocupacion, score_credito } = req.body;
     const result = await session.run(
       `CREATE (u:Usuario {
-        id_usuario: randomInteger() % 999999 + 100000,
+        id_usuario: toInteger(rand() * 9000000) + 1000000,
         nombre: $nombre,
         email: $email,
         fecha_registro: date($fecha_registro),
