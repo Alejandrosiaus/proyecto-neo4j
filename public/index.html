@@ -1747,7 +1747,13 @@ function buildTable(data, cols, formatters = {}) {
     const cells = cols.map(c => {
       const val = row[c];
       const fmt = formatters[c];
-      const display = fmt ? fmt(val) : (val === null || val === undefined ? '<span style="color:var(--text-dim)">—</span>' : String(val));
+      const display = fmt 
+        ? fmt(val) 
+        : (val === null || val === undefined 
+            ? '<span style="color:var(--text-dim)">—</span>' 
+            : (typeof val === 'object' && val !== null && val.low !== undefined
+              ? val.low 
+              : String(val)));
       return `<td>${display}</td>`;
     }).join('');
     return `<tr>${cells}</tr>`;
