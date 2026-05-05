@@ -717,8 +717,17 @@
         </div>
         <div class="inline-actions">
           <input id="upd-c-id" type="number" placeholder="ID Cuenta" style="max-width:130px">
-          <input id="upd-c-campo" type="text" placeholder="Campo" style="max-width:140px">
-          <input id="upd-c-valor" type="text" placeholder="Nuevo valor" style="max-width:150px">
+          <select id="upd-c-campo" onchange="onCampoCuentaChange()" style="max-width:170px">
+            <option value="">-- Campo --</option>
+            <option value="tipo">Tipo</option>
+            <option value="saldo">Saldo</option>
+            <option value="moneda">Moneda</option>
+            <option value="limite_diario">Límite Diario</option>
+            <option value="estado">Estado</option>
+          </select>
+          <div id="upd-c-valor-wrap" style="display:contents">
+            <input id="upd-c-valor-text" type="text" placeholder="Nuevo valor" style="max-width:170px">
+          </div>
           <button class="btn btn-primary btn-sm" onclick="actualizarCuenta()"><svg class="ico ico-sm"><use href="#i-edit"/></svg>Actualizar</button>
           <button class="btn btn-danger btn-sm" onclick="eliminarCuenta()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
         </div>
@@ -1576,22 +1585,45 @@ async function eliminarUsuario() {
 }
 
 // ── CUENTAS ──────────────────────────────────────────────
+// ── CUENTAS ──────────────────────────────────────────────
+function onCampoCuentaChange() {
+  const campo = document.getElementById('upd-c-campo').value;
+  const wrap = document.getElementById('upd-c-valor-wrap');
+  if (campo === 'estado') {
+    wrap.innerHTML = `<select id="upd-c-valor-text" style="max-width:170px"><option value="true">Activa</option><option value="false">Inactiva</option></select>`;
+  } else if (campo === 'tipo') {
+    wrap.innerHTML = `<select id="upd-c-valor-text" style="max-width:170px"><option>Ahorro</option><option>Corriente</option><option>Inversión</option><option>Empresarial</option><option>Nómina</option></select>`;
+  } else if (campo === 'moneda') {
+    wrap.innerHTML = `<select id="upd-c-valor-text" style="max-width:170px"><option>GTQ</option><option>USD</option><option>EUR</option></select>`;
+  } else if (campo === 'saldo' || campo === 'limite_diario') {
+    wrap.innerHTML = `<input id="upd-c-valor-text" type="number" min="0" step="0.01" placeholder="Ej: 5000.00" style="max-width:170px">`;
+  } else {
+    wrap.innerHTML = `<input id="upd-c-valor-text" type="text" placeholder="Nuevo valor" style="max-width:170px">`;
+  }
+}
+
 async function loadCuentas() {
-  const params = new URLSearchParams();
-  const tipo = document.getElementById('f-c-tipo')?.value;
-  const min = document.getElementById('f-c-min')?.value;
-  const max = document.getElementById('f-c-max')?.value;
-  if (tipo) params.append('tipo', tipo);
-  if (min) params.append('min_saldo', min);
-  if (max) params.append('max_saldo', max);
-  params.append('limit', '30');
-  const r = await fetch(`${API}/cuentas?${params}`);
-  const { data } = await r.json();
-  document.getElementById('cuentas-table').innerHTML = buildTable(data,
-    ['id_cuenta','tipo','saldo','moneda','limite_diario','estado','propietario'],
-    { saldo: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
-      estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activa':'Inactiva'}</span>` }
-  );
+  const tableEl = document.getElementById('cuentas-table');
+  try {
+    const params = new URLSearchParams();
+    const tipo = document.getElementById('f-c-tipo')?.value;
+    const min  = document.getElementById('f-c-min')?.value;
+    const max  = document.getElementById('f-c-max')?.value;
+    if (tipo) params.append('tipo', tipo);
+    if (min)  params.append('min_saldo', min);
+    if (max)  params.append('max_saldo', max);
+    params.append('limit', '50');
+    tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando cuentas...</div>';
+    const r = await fetch(`${API}/cuentas?${params}`);
+    const json = await r.json();
+    if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
+    tableEl.innerHTML = buildTable(json.data || [],
+      ['id_cuenta','tipo','saldo','moneda','limite_diario','estado','propietario'],
+      { saldo: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
+        limite_diario: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
+        estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activa':'Inactiva'}</span>` }
+    );
+  } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
 async function crearCuenta() {
@@ -1605,51 +1637,66 @@ async function crearCuenta() {
     estado: true
   };
   if (!body.id_usuario) return toast('ID de usuario requerido', 'error');
-  const r = await fetch(`${API}/cuentas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) { toast('Cuenta creada'); loadCuentas(); }
-  else toast(d.error, 'error');
+  if (!body.fecha_creacion) return toast('Fecha de creación requerida', 'error');
+  try {
+    const r = await fetch(`${API}/cuentas`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { toast('Cuenta creada'); await loadCuentas(); }
+    else toast(d.error || 'Error al crear cuenta', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function actualizarCuenta() {
-  const id = document.getElementById('upd-c-id').value;
+  const id = parseInt(document.getElementById('upd-c-id').value);
   const campo = document.getElementById('upd-c-campo').value;
-  let valor = document.getElementById('upd-c-valor').value;
-  if (!id || !campo || !valor) return toast('Completa todos los campos', 'error');
-  if (valor === 'true') valor = true; else if (valor === 'false') valor = false;
-  else if (!isNaN(valor)) valor = Number(valor);
-  const r = await fetch(`${API}/cuentas/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: valor}) });
-  const d = await r.json();
-  if (d.success) { toast('Cuenta actualizada'); loadCuentas(); }
-  else toast(d.error, 'error');
+  const valorEl = document.getElementById('upd-c-valor-text');
+  const valorRaw = valorEl ? valorEl.value : '';
+  if (!id || !campo || valorRaw === '') return toast('Completa ID, campo y valor', 'error');
+  let v;
+  if (campo === 'estado')  v = valorRaw === 'true';
+  else if (campo === 'saldo' || campo === 'limite_diario') { v = parseFloat(valorRaw); if (isNaN(v)) return toast('Valor numérico inválido', 'error'); }
+  else v = valorRaw;
+  try {
+    const r = await fetch(`${API}/cuentas/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({[campo]: v}) });
+    const d = await r.json();
+    if (d.success) { toast(`✓ ${campo} actualizado`); await loadCuentas(); }
+    else toast(d.error || 'Cuenta no encontrada', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function eliminarCuenta() {
   const id = document.getElementById('upd-c-id').value;
   if (!id || !confirm(`¿Eliminar cuenta ${id}?`)) return;
-  const r = await fetch(`${API}/cuentas/${id}`, { method: 'DELETE' });
-  const d = await r.json();
-  if (d.success) { toast('Cuenta eliminada'); loadCuentas(); }
-  else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/cuentas/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { toast('Cuenta eliminada'); await loadCuentas(); }
+    else toast(d.error || 'Error al eliminar', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 // ── TRANSACCIONES ────────────────────────────────────────
 async function loadTransacciones() {
-  const params = new URLSearchParams();
-  const tipo = document.getElementById('f-t-tipo')?.value;
-  const fraude = document.getElementById('f-t-fraude')?.value;
-  const min = document.getElementById('f-t-min')?.value;
-  if (tipo) params.append('tipo', tipo);
-  if (fraude) params.append('es_fraudulenta', fraude);
-  if (min) params.append('min_monto', min);
-  params.append('limit', '30');
-  const r = await fetch(`${API}/transacciones?${params}`);
-  const { data } = await r.json();
-  document.getElementById('transacciones-table').innerHTML = buildTable(data,
-    ['id_transaccion','tipo','monto','moneda','canal','fecha','es_fraudulenta','cuenta_origen','cuenta_destino'],
-    { monto: v => `<strong>Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}</strong>`,
-      es_fraudulenta: v => `<span class="badge ${v?'badge-red':'badge-green'}">${v?'FRAUDE':'OK'}</span>` }
-  );
+  const tableEl = document.getElementById('transacciones-table');
+  try {
+    const params = new URLSearchParams();
+    const tipo   = document.getElementById('f-t-tipo')?.value;
+    const fraude = document.getElementById('f-t-fraude')?.value;
+    const min    = document.getElementById('f-t-min')?.value;
+    if (tipo)   params.append('tipo', tipo);
+    if (fraude) params.append('es_fraudulenta', fraude);
+    if (min)    params.append('min_monto', min);
+    params.append('limit', '50');
+    tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando transacciones...</div>';
+    const r = await fetch(`${API}/transacciones?${params}`);
+    const json = await r.json();
+    if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
+    tableEl.innerHTML = buildTable(json.data || [],
+      ['id_transaccion','tipo','monto','moneda','canal','fecha','es_fraudulenta','cuenta_origen','cuenta_destino'],
+      { monto: v => `<strong>Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}</strong>`,
+        es_fraudulenta: v => `<span class="badge ${v?'badge-red':'badge-green'}">${v?'FRAUDE':'OK'}</span>` }
+    );
+  } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
 async function crearTransaccion() {
@@ -1665,51 +1712,65 @@ async function crearTransaccion() {
     fecha: document.getElementById('t-fecha').value
   };
   if (!body.id_cuenta_origen || !body.id_cuenta_destino || !body.monto) return toast('Origen, destino y monto son requeridos', 'error');
-  const r = await fetch(`${API}/transacciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) { toast('Transacción registrada'); loadTransacciones(); }
-  else toast(d.error, 'error');
+  if (!body.fecha) return toast('La fecha es requerida', 'error');
+  try {
+    const r = await fetch(`${API}/transacciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { toast('Transacción registrada'); await loadTransacciones(); }
+    else toast(d.error || 'Error al crear transacción', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function eliminarTransaccion() {
   const id = document.getElementById('upd-t-id').value;
   if (!id || !confirm(`¿Eliminar transacción ${id}?`)) return;
-  const r = await fetch(`${API}/transacciones/${id}`, { method: 'DELETE' });
-  const d = await r.json();
-  if (d.success) { toast('Transacción eliminada'); loadTransacciones(); }
-  else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/transacciones/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) { toast('Transacción eliminada'); await loadTransacciones(); }
+    else toast(d.error || 'Error al eliminar', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function marcarFraudulenta() {
   const id = document.getElementById('upd-t-id').value;
   if (!id) return toast('Ingresa el ID de la transacción', 'error');
-  const r = await fetch(`${API}/transacciones/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({es_fraudulenta: true}) });
-  const d = await r.json();
-  if (d.success) { toast('Marcada como fraudulenta'); loadTransacciones(); }
-  else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/transacciones/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({es_fraudulenta: true}) });
+    const d = await r.json();
+    if (d.success) { toast('Marcada como fraudulenta'); await loadTransacciones(); }
+    else toast(d.error || 'Transacción no encontrada', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 // ── DISPOSITIVOS ─────────────────────────────────────────
 async function loadDispositivos() {
-  const tipo = document.getElementById('f-d-tipo')?.value;
-  const params = tipo ? `?tipo=${tipo}&limit=30` : '?limit=30';
-  const r = await fetch(`${API}/dispositivos${params}`);
-  const { data } = await r.json();
-  document.getElementById('dispositivos-table').innerHTML = buildTable(data,
-    ['id_dispositivo','tipo','ip','sistema_operativo','marca','ubicacion','verificado'],
-    { verificado: v => v
-      ? `<span class="badge badge-green"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-check"/></svg>Sí</span>`
-      : `<span class="badge badge-red"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-x"/></svg>No</span>` }
-  );
+  const tableEl = document.getElementById('dispositivos-table');
+  try {
+    const tipo = document.getElementById('f-d-tipo')?.value;
+    const params = tipo ? `?tipo=${tipo}&limit=50` : '?limit=50';
+    tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando dispositivos...</div>';
+    const r = await fetch(`${API}/dispositivos${params}`);
+    const json = await r.json();
+    if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
+    tableEl.innerHTML = buildTable(json.data || [],
+      ['id_dispositivo','tipo','ip','sistema_operativo','marca','ubicacion','verificado'],
+      { verificado: v => v
+        ? `<span class="badge badge-green"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-check"/></svg>Sí</span>`
+        : `<span class="badge badge-red"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-x"/></svg>No</span>` }
+    );
+  } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
 // ── UBICACIONES ──────────────────────────────────────────
 async function loadUbicaciones() {
-  const r = await fetch(`${API}/ubicaciones`);
-  const { data } = await r.json();
-  document.getElementById('ubicaciones-table').innerHTML = buildTable(data,
-    ['id_ubicacion','pais','ciudad','latitud','longitud']
-  );
+  const tableEl = document.getElementById('ubicaciones-table');
+  try {
+    const r = await fetch(`${API}/ubicaciones`);
+    const json = await r.json();
+    if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
+    tableEl.innerHTML = buildTable(json.data || [], ['id_ubicacion','pais','ciudad','latitud','longitud']);
+  } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
 // ── RELACIONES ───────────────────────────────────────────
@@ -1725,9 +1786,11 @@ async function crearRelacion() {
     id_destino: document.getElementById('r-id-destino').value,
     propiedades: props
   };
-  const r = await fetch(`${API}/relaciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) toast('Relación creada'); else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/relaciones`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) toast('Relación creada'); else toast(d.error || 'Error al crear', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function actualizarRelacion() {
@@ -1742,9 +1805,11 @@ async function actualizarRelacion() {
     id_destino: document.getElementById('r2-id-destino').value,
     updates
   };
-  const r = await fetch(`${API}/relaciones/update`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) toast('Relación actualizada'); else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/relaciones/update`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) toast('Relación actualizada'); else toast(d.error || 'Error al actualizar', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 async function eliminarRelacion() {
@@ -1755,9 +1820,11 @@ async function eliminarRelacion() {
     tipo_destino: document.getElementById('r2-tipo-destino').value,
     id_destino: document.getElementById('r2-id-destino').value
   };
-  const r = await fetch(`${API}/relaciones/delete`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  const d = await r.json();
-  if (d.success) toast('Relación eliminada'); else toast(d.error, 'error');
+  try {
+    const r = await fetch(`${API}/relaciones/delete`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) toast('Relación eliminada'); else toast(d.error || 'Error al eliminar', 'error');
+  } catch(err) { toast(err.message, 'error'); }
 }
 
 // ── CSV ──────────────────────────────────────────────────

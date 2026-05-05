@@ -421,15 +421,25 @@ app.post('/api/cuentas', async (req, res) => {
 app.put('/api/cuentas/:id', async (req, res) => {
   const session = getSession();
   try {
-    const updates = req.body;
-    const setClause = Object.keys(updates).map(k => `c.${k} = $${k}`).join(', ');
+    const idParam = parseInt(req.params.id);
+    const safeUpdates = {};
+    for (const [k, v] of Object.entries(req.body)) {
+      if (v === 'true' || v === true)         safeUpdates[k] = true;
+      else if (v === 'false' || v === false)   safeUpdates[k] = false;
+      else if (typeof v === 'string' && !isNaN(v) && v.trim() !== '') safeUpdates[k] = Number(v);
+      else safeUpdates[k] = v;
+    }
+    console.log('[PUT /api/cuentas] id:', idParam, '| updates:', JSON.stringify(safeUpdates));
+    const setClause = Object.keys(safeUpdates).map(k => `c.${k} = $${k}`).join(', ');
     const result = await session.run(
-      `MATCH (c:Cuenta {id_cuenta: $id}) SET ${setClause} RETURN c`,
-      { id: parseInt(req.params.id), ...updates }
+      `MATCH (c:Cuenta) WHERE toInteger(c.id_cuenta) = toInteger($id) SET ${setClause} RETURN c`,
+      { id: idParam, ...safeUpdates }
     );
-    if (!result.records.length) return res.status(404).json({ success: false, error: 'Cuenta no encontrada' });
+    console.log('[PUT /api/cuentas] registros encontrados:', result.records.length);
+    if (!result.records.length) return res.status(404).json({ success: false, error: `Cuenta con id ${idParam} no encontrada` });
     res.json({ success: true, data: convertProps(result.records[0].get('c').properties) });
   } catch (err) {
+    console.error('[PUT /api/cuentas] ERROR:', err.message);
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
 });
@@ -437,7 +447,10 @@ app.put('/api/cuentas/:id', async (req, res) => {
 app.delete('/api/cuentas/:id', async (req, res) => {
   const session = getSession();
   try {
-    await session.run(`MATCH (c:Cuenta {id_cuenta: $id}) DETACH DELETE c`, { id: parseInt(req.params.id) });
+    await session.run(
+      `MATCH (c:Cuenta) WHERE toInteger(c.id_cuenta) = toInteger($id) DETACH DELETE c`,
+      { id: parseInt(req.params.id) }
+    );
     res.json({ success: true, message: 'Cuenta eliminada' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -519,15 +532,25 @@ app.post('/api/transacciones', async (req, res) => {
 app.put('/api/transacciones/:id', async (req, res) => {
   const session = getSession();
   try {
-    const updates = req.body;
-    const setClause = Object.keys(updates).map(k => `t.${k} = $${k}`).join(', ');
+    const idParam = parseInt(req.params.id);
+    const safeUpdates = {};
+    for (const [k, v] of Object.entries(req.body)) {
+      if (v === 'true' || v === true)         safeUpdates[k] = true;
+      else if (v === 'false' || v === false)   safeUpdates[k] = false;
+      else if (typeof v === 'string' && !isNaN(v) && v.trim() !== '') safeUpdates[k] = Number(v);
+      else safeUpdates[k] = v;
+    }
+    console.log('[PUT /api/transacciones] id:', idParam, '| updates:', JSON.stringify(safeUpdates));
+    const setClause = Object.keys(safeUpdates).map(k => `t.${k} = $${k}`).join(', ');
     const result = await session.run(
-      `MATCH (t:Transaccion {id_transaccion: $id}) SET ${setClause} RETURN t`,
-      { id: parseInt(req.params.id), ...updates }
+      `MATCH (t:Transaccion) WHERE toInteger(t.id_transaccion) = toInteger($id) SET ${setClause} RETURN t`,
+      { id: idParam, ...safeUpdates }
     );
-    if (!result.records.length) return res.status(404).json({ success: false, error: 'Transacción no encontrada' });
+    console.log('[PUT /api/transacciones] registros encontrados:', result.records.length);
+    if (!result.records.length) return res.status(404).json({ success: false, error: `Transacción con id ${idParam} no encontrada` });
     res.json({ success: true, data: convertProps(result.records[0].get('t').properties) });
   } catch (err) {
+    console.error('[PUT /api/transacciones] ERROR:', err.message);
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
 });
@@ -535,7 +558,10 @@ app.put('/api/transacciones/:id', async (req, res) => {
 app.delete('/api/transacciones/:id', async (req, res) => {
   const session = getSession();
   try {
-    await session.run(`MATCH (t:Transaccion {id_transaccion: $id}) DETACH DELETE t`, { id: parseInt(req.params.id) });
+    await session.run(
+      `MATCH (t:Transaccion) WHERE toInteger(t.id_transaccion) = toInteger($id) DETACH DELETE t`,
+      { id: parseInt(req.params.id) }
+    );
     res.json({ success: true, message: 'Transacción eliminada' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
