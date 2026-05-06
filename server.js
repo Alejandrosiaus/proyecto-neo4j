@@ -262,10 +262,12 @@ app.post('/api/nodos/bulk/propiedades', async (req, res) => {
   const session = getSession();
   try {
     const { tipo, ids, propiedades } = req.body;
+    const intIds = ids.map(id => parseInt(id));
     const setClause = Object.keys(propiedades).map(k => `n.${k} = $${k}`).join(', ');
+    // Use toInteger on both sides to avoid Neo4j Integer vs JS number type mismatch
     const result = await session.run(
-      `MATCH (n:${tipo}) WHERE n.id_${tipo.toLowerCase()} IN $ids SET ${setClause} RETURN count(n) as updated`,
-      { ids: ids.map(id => parseInt(id)), ...propiedades }
+      `MATCH (n:${tipo}) WHERE toInteger(n.id_${tipo.toLowerCase()}) IN [x IN $ids | toInteger(x)] SET ${setClause} RETURN count(n) as updated`,
+      { ids: intIds, ...propiedades }
     );
     res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
   } catch (err) {
@@ -278,10 +280,12 @@ app.delete('/api/nodos/bulk/propiedades', async (req, res) => {
   const session = getSession();
   try {
     const { tipo, ids, propiedades } = req.body;
+    const intIds = ids.map(id => parseInt(id));
     const removeClause = propiedades.map(p => `n.${p}`).join(', ');
+    // Use toInteger on both sides to avoid Neo4j Integer vs JS number type mismatch
     const result = await session.run(
-      `MATCH (n:${tipo}) WHERE n.id_${tipo.toLowerCase()} IN $ids REMOVE ${removeClause} RETURN count(n) as updated`,
-      { ids: ids.map(id => parseInt(id)) }
+      `MATCH (n:${tipo}) WHERE toInteger(n.id_${tipo.toLowerCase()}) IN [x IN $ids | toInteger(x)] REMOVE ${removeClause} RETURN count(n) as updated`,
+      { ids: intIds }
     );
     res.json({ success: true, updated: result.records[0].get('updated').toNumber() });
   } catch (err) {
@@ -608,7 +612,12 @@ app.get('/api/dispositivos', async (req, res) => {
 app.get('/api/ubicaciones', async (req, res) => {
   const session = getSession();
   try {
-    const result = await session.run(`MATCH (ub:Ubicacion) RETURN ub ORDER BY ub.pais LIMIT 200`);
+    const limitVal = Math.max(1, Math.min(parseInt(req.query.limit) || 50, 500));
+    const skipVal  = Math.max(0, parseInt(req.query.skip) || 0);
+    const result = await session.run(
+      `MATCH (ub:Ubicacion) RETURN ub ORDER BY ub.pais SKIP toInteger($skip) LIMIT toInteger($limit)`,
+      { limit: limitVal, skip: skipVal }
+    );
     res.json({ success: true, data: result.records.map(r => convertProps(r.get('ub').properties)) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -686,36 +695,42 @@ app.delete('/api/relaciones/bulk/delete', async (req, res) => {
 });
 
 // POST agregar propiedades a una relación específica
-app.post('/api/relaciones/:id/propiedades', async (req, res) => {
+// Note: route uses /propiedades (no :id) since identity comes from body params
+app.post('/api/relaciones/propiedades', async (req, res) => {
   const session = getSession();
   try {
     const { tipo_origen, id_origen, tipo_destino, id_destino, tipo_relacion, propiedades } = req.body;
     const setClause = Object.keys(propiedades).map(k => `r.${k} = $${k}`).join(', ');
     const result = await session.run(
-      `MATCH (a:${tipo_origen} {id_${tipo_origen.toLowerCase()}: $id_origen})-[r:${tipo_relacion}]->(b:${tipo_destino} {id_${tipo_destino.toLowerCase()}: $id_destino})
+      `MATCH (a:${tipo_origen})-[r:${tipo_relacion}]->(b:${tipo_destino})
+       WHERE toInteger(a.id_${tipo_origen.toLowerCase()}) = toInteger($id_origen)
+         AND toInteger(b.id_${tipo_destino.toLowerCase()}) = toInteger($id_destino)
        SET ${setClause} RETURN r, type(r) as tipo`,
       { id_origen: parseInt(id_origen), id_destino: parseInt(id_destino), ...propiedades }
     );
     if (!result.records.length) return res.status(404).json({ success: false, error: 'Relación no encontrada' });
-    res.json({ success: true, data: result.records[0].get('r').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('r').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }
 });
 
 // DELETE eliminar propiedades de una relación específica
-app.delete('/api/relaciones/:id/propiedades', async (req, res) => {
+// Note: route uses /propiedades (no :id) since identity comes from body params
+app.delete('/api/relaciones/propiedades', async (req, res) => {
   const session = getSession();
   try {
     const { tipo_origen, id_origen, tipo_destino, id_destino, tipo_relacion, propiedades } = req.body;
     const removeClause = propiedades.map(p => `r.${p}`).join(', ');
     const result = await session.run(
-      `MATCH (a:${tipo_origen} {id_${tipo_origen.toLowerCase()}: $id_origen})-[r:${tipo_relacion}]->(b:${tipo_destino} {id_${tipo_destino.toLowerCase()}: $id_destino})
+      `MATCH (a:${tipo_origen})-[r:${tipo_relacion}]->(b:${tipo_destino})
+       WHERE toInteger(a.id_${tipo_origen.toLowerCase()}) = toInteger($id_origen)
+         AND toInteger(b.id_${tipo_destino.toLowerCase()}) = toInteger($id_destino)
        REMOVE ${removeClause} RETURN r, type(r) as tipo`,
       { id_origen: parseInt(id_origen), id_destino: parseInt(id_destino) }
     );
     if (!result.records.length) return res.status(404).json({ success: false, error: 'Relación no encontrada' });
-    res.json({ success: true, data: result.records[0].get('r').properties });
+    res.json({ success: true, data: convertProps(result.records[0].get('r').properties) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally { session.close(); }

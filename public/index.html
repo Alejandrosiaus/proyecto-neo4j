@@ -319,6 +319,16 @@
   .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ── PAGINATION ── */
+  .pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: .65rem 1rem; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; background: var(--bg); font-size: .82rem; color: var(--text-dim); flex-wrap: wrap; gap: .5rem; }
+  .pagination-bar .page-info { display: flex; align-items: center; gap: .75rem; }
+  .pagination-bar .page-badge { background: var(--accent-soft); color: var(--accent); border-radius: 20px; padding: .15rem .7rem; font-weight: 600; font-size: .8rem; border: 1px solid rgba(110,142,251,.2); }
+  .pagination-bar .page-size-select { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: .2rem .4rem; font-size: .8rem; cursor: pointer; }
+  .pagination-bar button { background: var(--surface); border: 1px solid var(--border); color: var(--text-2); border-radius: 6px; padding: .3rem .8rem; font-size: .8rem; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: .35rem; }
+  .pagination-bar button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .pagination-bar button:disabled { opacity: .35; cursor: not-allowed; }
+  .pagination-nav { display: flex; gap: .4rem; align-items: center; }
+
   /* ── UPLOAD ZONE ── */
   .upload-zone {
     border: 1.5px dashed var(--border-strong);
@@ -617,7 +627,7 @@
           </div>
           <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadUsuarios()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
+            <button class="btn btn-ghost" onclick="pgState.usuarios.page=0; loadUsuarios()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
 
@@ -643,6 +653,7 @@
         <div id="usuarios-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div>Cargando usuarios...</div>
         </div>
+        <div id="usuarios-pagination" class="pagination-bar" style="display:none"></div>
       </div>
     </div>
 
@@ -712,7 +723,7 @@
           </div>
           <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadCuentas()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
+            <button class="btn btn-ghost" onclick="pgState.cuentas.page=0; loadCuentas()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
         <div class="inline-actions">
@@ -734,6 +745,7 @@
         <div id="cuentas-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div>Cargando cuentas...</div>
         </div>
+        <div id="cuentas-pagination" class="pagination-bar" style="display:none"></div>
       </div>
     </div>
 
@@ -823,7 +835,7 @@
           </div>
           <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadTransacciones()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
+            <button class="btn btn-ghost" onclick="pgState.transacciones.page=0; loadTransacciones()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Filtrar</button>
           </div>
         </div>
         <div class="inline-actions">
@@ -834,6 +846,7 @@
         <div id="transacciones-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div>Cargando transacciones...</div>
         </div>
+        <div id="transacciones-pagination" class="pagination-bar" style="display:none"></div>
       </div>
     </div>
 
@@ -852,12 +865,13 @@
           </div>
           <div class="form-group" style="justify-content:flex-end;flex:0 0 auto">
             <label>&nbsp;</label>
-            <button class="btn btn-ghost" onclick="loadDispositivos()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Buscar</button>
+            <button class="btn btn-ghost" onclick="pgState.dispositivos.page=0; loadDispositivos()"><svg class="ico ico-sm"><use href="#i-search"/></svg>Buscar</button>
           </div>
         </div>
         <div id="dispositivos-table" class="table-wrap">
           <div class="loading"><div class="spinner"></div></div>
         </div>
+        <div id="dispositivos-pagination" class="pagination-bar" style="display:none"></div>
       </div>
     </div>
 
@@ -872,6 +886,7 @@
         <div id="ubicaciones-table" class="table-wrap">
           <div class="empty-state">Haz clic en Cargar Ubicaciones</div>
         </div>
+        <div id="ubicaciones-pagination" class="pagination-bar" style="display:none"></div>
       </div>
     </div>
 
@@ -1176,17 +1191,27 @@
           <span class="panel-tag">BULK</span>
         </div>
         <div class="form-group">
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Nodo</label>
           <select id="bulk-prop-tipo" class="input">
-            <option value="">Seleccionar tipo de nodo</option>
+            <option value="">-- Seleccionar tipo --</option>
             <option value="Usuario">Usuario</option>
             <option value="Cuenta">Cuenta</option>
             <option value="Transaccion">Transacción</option>
             <option value="Dispositivo">Dispositivo</option>
             <option value="Ubicacion">Ubicación</option>
           </select>
-          <textarea id="bulk-prop-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
-          <textarea id="bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="3"></textarea>
-          <button class="btn btn-primary" onclick="agregarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar a Múltiples</button>
+          <label style="font-size:.85rem;color:var(--text-dim)">IDs de los nodos (separados por comas)</label>
+          <input type="text" id="bulk-prop-ids" placeholder="Ej: 1234567, 2345678, 3456789" class="input">
+          <label style="font-size:.85rem;color:var(--text-dim);margin-top:.25rem">Propiedades a agregar</label>
+          <div id="bulk-prop-rows" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem">
+            <div class="prop-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center">
+              <input type="text" placeholder="nombre (ej: riesgo)" class="input" style="margin:0">
+              <input type="text" placeholder="valor (ej: alto o 5)" class="input" style="margin:0">
+              <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+            </div>
+          </div>
+          <button class="btn" onclick="addPropRow('bulk-prop-rows')" style="align-self:flex-start;font-size:.82rem;padding:.35rem .8rem;margin-bottom:.5rem">＋ Agregar campo</button>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Aplicar a Múltiples Nodos</button>
           <div id="bulk-prop-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1197,17 +1222,26 @@
           <span class="panel-tag">BULK DELETE</span>
         </div>
         <div class="form-group">
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Nodo</label>
           <select id="bulk-del-tipo" class="input">
-            <option value="">Seleccionar tipo de nodo</option>
+            <option value="">-- Seleccionar tipo --</option>
             <option value="Usuario">Usuario</option>
             <option value="Cuenta">Cuenta</option>
             <option value="Transaccion">Transacción</option>
             <option value="Dispositivo">Dispositivo</option>
             <option value="Ubicacion">Ubicación</option>
           </select>
-          <textarea id="bulk-del-ids" placeholder="IDs de nodos (separadas por comas): 1,2,3,5" class="input" rows="2"></textarea>
-          <textarea id="bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas): prop1,prop2" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples</button>
+          <label style="font-size:.85rem;color:var(--text-dim)">IDs de los nodos (separados por comas)</label>
+          <input type="text" id="bulk-del-ids" placeholder="Ej: 1234567, 2345678, 3456789" class="input">
+          <label style="font-size:.85rem;color:var(--text-dim);margin-top:.25rem">Propiedades a eliminar</label>
+          <div id="bulk-del-rows" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem">
+            <div class="prop-row" style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center">
+              <input type="text" placeholder="nombre de propiedad (ej: riesgo)" class="input" style="margin:0">
+              <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+            </div>
+          </div>
+          <button class="btn" onclick="addDelRow('bulk-del-rows')" style="align-self:flex-start;font-size:.82rem;padding:.35rem .8rem;margin-bottom:.5rem">＋ Agregar campo</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiples()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples Nodos</button>
           <div id="bulk-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1218,99 +1252,209 @@
       <h1>Gestión de Propiedades — Relaciones</h1>
       <p class="subtitle">Agregar o eliminar propiedades en una o múltiples relaciones</p>
 
+      <!-- Panel: Agregar propiedad a UNA relación -->
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">Agregar Propiedad a Una Relación</div>
           <span class="panel-tag">UPDATE</span>
         </div>
         <div class="form-group">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
+          <select id="rel-prop-tipo-rel" class="input" onchange="onRelPropTipoChange()">
+            <option value="">-- Seleccionar tipo --</option>
+            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
+            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
+            <option value="USA">USA (Usuario → Dispositivo)</option>
+            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
+            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
+            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
+            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
+            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
+            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
+            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
+            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
+            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
+            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
+            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
-              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Origen</label>
-              <select id="rel-prop-tipo-origen" class="input">
-                <option value="">Tipo</option>
-                <option value="Usuario">Usuario</option>
-                <option value="Cuenta">Cuenta</option>
-              </select>
-              <input type="number" id="rel-prop-id-origen" placeholder="ID Origen" class="input">
+              <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Origen</label>
+              <input type="text" id="rel-prop-tipo-origen" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <label style="font-size:.85rem;color:var(--text-dim)">ID Origen</label>
+              <input type="number" id="rel-prop-id-origen" placeholder="ID del nodo origen" class="input">
             </div>
             <div>
-              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Destino</label>
-              <select id="rel-prop-tipo-destino" class="input">
-                <option value="">Tipo</option>
-                <option value="Usuario">Usuario</option>
-                <option value="Cuenta">Cuenta</option>
-              </select>
-              <input type="number" id="rel-prop-id-destino" placeholder="ID Destino" class="input">
+              <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Destino</label>
+              <input type="text" id="rel-prop-tipo-destino" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <label style="font-size:.85rem;color:var(--text-dim)">ID Destino</label>
+              <input type="number" id="rel-prop-id-destino" placeholder="ID del nodo destino" class="input">
             </div>
           </div>
-          <input type="text" id="rel-prop-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
-          <input type="text" id="rel-prop-nombre" placeholder="Nombre de la propiedad" class="input">
-          <input type="text" id="rel-prop-valor" placeholder="Valor (número o texto)" class="input">
-          <button class="btn btn-primary" onclick="agregarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Nombre de la propiedad</label>
+              <input type="text" id="rel-prop-nombre" placeholder="Ej: activo" class="input">
+            </div>
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Valor</label>
+              <input type="text" id="rel-prop-valor" placeholder="true / false / 123 / texto" class="input">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="agregarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar Propiedad</button>
           <div id="rel-prop-resultado" class="empty-state"></div>
         </div>
       </div>
 
+      <!-- Panel: Eliminar propiedad de UNA relación -->
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">Eliminar Propiedad de Una Relación</div>
+          <div class="panel-title">Eliminar Propiedades de Una Relación</div>
           <span class="panel-tag">DELETE</span>
         </div>
         <div class="form-group">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
+          <select id="rel-del-tipo-rel" class="input" onchange="onRelDelTipoChange()">
+            <option value="">-- Seleccionar tipo --</option>
+            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
+            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
+            <option value="USA">USA (Usuario → Dispositivo)</option>
+            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
+            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
+            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
+            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
+            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
+            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
+            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
+            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
+            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
+            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
+            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
-              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Origen</label>
-              <select id="rel-del-tipo-origen" class="input">
-                <option value="">Tipo</option>
-                <option value="Usuario">Usuario</option>
-                <option value="Cuenta">Cuenta</option>
-              </select>
-              <input type="number" id="rel-del-id-origen" placeholder="ID Origen" class="input">
+              <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Origen</label>
+              <input type="text" id="rel-del-tipo-origen" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <label style="font-size:.85rem;color:var(--text-dim)">ID Origen</label>
+              <input type="number" id="rel-del-id-origen" placeholder="ID del nodo origen" class="input">
             </div>
             <div>
-              <label style="font-size:.85rem;color:var(--text-dim)">Nodo Destino</label>
-              <select id="rel-del-tipo-destino" class="input">
-                <option value="">Tipo</option>
-                <option value="Usuario">Usuario</option>
-                <option value="Cuenta">Cuenta</option>
-              </select>
-              <input type="number" id="rel-del-id-destino" placeholder="ID Destino" class="input">
+              <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Destino</label>
+              <input type="text" id="rel-del-tipo-destino" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <label style="font-size:.85rem;color:var(--text-dim)">ID Destino</label>
+              <input type="number" id="rel-del-id-destino" placeholder="ID del nodo destino" class="input">
             </div>
           </div>
-          <input type="text" id="rel-del-tipo-rel" placeholder="Tipo de Relación (ej: TIENE)" class="input">
-          <textarea id="rel-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar</button>
+          <label style="font-size:.85rem;color:var(--text-dim);margin-top:.25rem">Propiedades a eliminar</label>
+          <div id="rel-del-rows" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem">
+            <div class="prop-row" style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center">
+              <input type="text" placeholder="nombre de propiedad (ej: activo)" class="input" style="margin:0">
+              <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+            </div>
+          </div>
+          <button class="btn" onclick="addDelRow('rel-del-rows')" style="align-self:flex-start;font-size:.82rem;padding:.35rem .8rem;margin-bottom:.5rem">＋ Agregar campo</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadRelacion()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar Propiedades</button>
           <div id="rel-del-resultado" class="empty-state"></div>
         </div>
       </div>
 
+      <!-- Panel: Agregar propiedades a MÚLTIPLES relaciones -->
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">Agregar Propiedades a Múltiples Relaciones (Bulk)</div>
+          <div class="panel-title">Agregar Propiedades a Múltiples Relaciones</div>
           <span class="panel-tag">BULK</span>
         </div>
         <div class="form-group">
-          <input type="text" id="rel-bulk-prop-tipo" placeholder="Tipo de Relación (ej: TIENE)" class="input">
-          <input type="text" id="rel-bulk-prop-campo" placeholder="Campo de filtro (ej: activo)" class="input">
-          <input type="text" id="rel-bulk-prop-valor" placeholder="Valor del filtro (ej: true)" class="input">
-          <textarea id="rel-bulk-prop-props" placeholder="Propiedades (formato: propiedad1:valor1, propiedad2:valor2)" class="input" rows="2"></textarea>
-          <button class="btn btn-primary" onclick="agregarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Agregar a Múltiples</button>
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
+          <select id="rel-bulk-prop-tipo" class="input" onchange="onRelBulkPropTipoChange()">
+            <option value="">-- Seleccionar tipo --</option>
+            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
+            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
+            <option value="USA">USA (Usuario → Dispositivo)</option>
+            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
+            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
+            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
+            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
+            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
+            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
+            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
+            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
+            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
+            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
+            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Campo de filtro</label>
+              <select id="rel-bulk-prop-campo" class="input">
+                <option value="">-- Seleccionar campo --</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Valor del filtro</label>
+              <input type="text" id="rel-bulk-prop-valor" placeholder="Ej: true o false o texto" class="input">
+            </div>
+          </div>
+          <label style="font-size:.85rem;color:var(--text-dim);margin-top:.25rem">Propiedades a agregar</label>
+          <div id="rel-bulk-prop-rows" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem">
+            <div class="prop-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center">
+              <input type="text" placeholder="nombre (ej: revisado)" class="input" style="margin:0">
+              <input type="text" placeholder="valor (ej: true)" class="input" style="margin:0">
+              <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+            </div>
+          </div>
+          <button class="btn" onclick="addPropRow('rel-bulk-prop-rows')" style="align-self:flex-start;font-size:.82rem;padding:.35rem .8rem;margin-bottom:.5rem">＋ Agregar campo</button>
+          <button class="btn btn-primary" onclick="agregarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-plus"/></svg>Aplicar a Múltiples Relaciones</button>
           <div id="rel-bulk-prop-resultado" class="empty-state"></div>
         </div>
       </div>
 
+      <!-- Panel: Eliminar propiedades de MÚLTIPLES relaciones -->
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">Eliminar Propiedades de Múltiples Relaciones (Bulk)</div>
+          <div class="panel-title">Eliminar Propiedades de Múltiples Relaciones</div>
           <span class="panel-tag">BULK DELETE</span>
         </div>
         <div class="form-group">
-          <input type="text" id="rel-bulk-del-tipo" placeholder="Tipo de Relación (ej: TIENE)" class="input">
-          <input type="text" id="rel-bulk-del-campo" placeholder="Campo de filtro (ej: activo)" class="input">
-          <input type="text" id="rel-bulk-del-valor" placeholder="Valor del filtro (ej: false)" class="input">
-          <textarea id="rel-bulk-del-props" placeholder="Propiedades a eliminar (separadas por comas)" class="input" rows="2"></textarea>
-          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples</button>
+          <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
+          <select id="rel-bulk-del-tipo" class="input" onchange="onRelBulkDelTipoChange()">
+            <option value="">-- Seleccionar tipo --</option>
+            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
+            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
+            <option value="USA">USA (Usuario → Dispositivo)</option>
+            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
+            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
+            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
+            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
+            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
+            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
+            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
+            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
+            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
+            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
+            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+          </select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Campo de filtro</label>
+              <select id="rel-bulk-del-campo" class="input">
+                <option value="">-- Seleccionar campo --</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.85rem;color:var(--text-dim)">Valor del filtro</label>
+              <input type="text" id="rel-bulk-del-valor" placeholder="Ej: false o texto" class="input">
+            </div>
+          </div>
+          <label style="font-size:.85rem;color:var(--text-dim);margin-top:.25rem">Propiedades a eliminar</label>
+          <div id="rel-bulk-del-rows" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem">
+            <div class="prop-row" style="display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center">
+              <input type="text" placeholder="nombre de propiedad (ej: activo)" class="input" style="margin:0">
+              <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+            </div>
+          </div>
+          <button class="btn" onclick="addDelRow('rel-bulk-del-rows')" style="align-self:flex-start;font-size:.82rem;padding:.35rem .8rem;margin-bottom:.5rem">＋ Agregar campo</button>
+          <button class="btn btn-danger" onclick="eliminarPropiedadesMultiplesRelaciones()"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Eliminar de Múltiples Relaciones</button>
           <div id="rel-bulk-del-resultado" class="empty-state"></div>
         </div>
       </div>
@@ -1450,23 +1594,75 @@ async function loadRiesgo() {
   );
 }
 
+// ════════════════════════════════════════════════════════
+//  PAGINACIÓN — motor central
+// ════════════════════════════════════════════════════════
+const pgState = {
+  usuarios:      { page: 0, size: 20 },
+  cuentas:       { page: 0, size: 20 },
+  transacciones: { page: 0, size: 20 },
+  dispositivos:  { page: 0, size: 20 },
+  ubicaciones:   { page: 0, size: 20 },
+};
+
+function renderPagination(key, dataLen) {
+  const bar = document.getElementById(`${key}-pagination`);
+  if (!bar) return;
+  const { page, size } = pgState[key];
+  const hasPrev = page > 0;
+  const hasNext = dataLen === size;
+  const from = page * size + 1;
+  const to   = page * size + dataLen;
+  bar.style.display = dataLen === 0 && page === 0 ? 'none' : 'flex';
+  bar.innerHTML = `
+    <div class="pagination-nav">
+      <button onclick="pgGo('${key}', 0)"         ${hasPrev ? '' : 'disabled'} title="Primera página">«</button>
+      <button onclick="pgGo('${key}', ${page-1})" ${hasPrev ? '' : 'disabled'}>← Anterior</button>
+    </div>
+    <div class="page-info">
+      <span class="page-badge">Pág. ${page + 1}</span>
+      <span>Registros ${from}–${to}</span>
+      <label style="display:flex;align-items:center;gap:.35rem">
+        Por página:
+        <select class="page-size-select" onchange="pgResize('${key}', this.value)">
+          ${[10,20,50,100].map(n=>`<option value="${n}" ${n===size?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </label>
+    </div>
+    <div class="pagination-nav">
+      <button onclick="pgGo('${key}', ${page+1})" ${hasNext ? '' : 'disabled'}>Siguiente →</button>
+      ${hasNext ? `<button onclick="pgGo('${key}', ${page+1})" disabled title="Total desconocido">»</button>` : ''}
+    </div>`;
+}
+
+const pgLoaders = {};  // se puebla más abajo
+
+function pgGo(key, page) {
+  pgState[key].page = page;
+  pgLoaders[key]?.();
+}
+function pgResize(key, size) {
+  pgState[key].size = parseInt(size);
+  pgState[key].page = 0;
+  pgLoaders[key]?.();
+}
+
 // ── USUARIOS ─────────────────────────────────────────────
 async function loadUsuarios() {
   const tableEl = document.getElementById('usuarios-table');
   try {
+    const { page, size } = pgState.usuarios;
     const params = new URLSearchParams();
     const nombre = document.getElementById('f-u-nombre')?.value?.trim();
     const estado = document.getElementById('f-u-estado')?.value;
     if (nombre) params.append('nombre', nombre);
     if (estado) params.append('estado', estado);
-    params.append('limit', '50');
+    params.append('limit', size);
+    params.append('skip', page * size);
     tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando usuarios...</div>';
     const r = await fetch(`${API}/usuarios?${params}`);
     const json = await r.json();
-    if (!json.success) {
-      tableEl.innerHTML = `<div class="empty-state">Error: ${json.error || 'No se pudo cargar'}</div>`;
-      return;
-    }
+    if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error || 'No se pudo cargar'}</div>`; return; }
     const data = json.data || [];
     tableEl.innerHTML = buildTable(data,
       ['id_usuario','nombre','email','ocupacion','score_credito','estado','num_cuentas','labels'],
@@ -1474,10 +1670,12 @@ async function loadUsuarios() {
         labels: v => `<div class="chip-list">${(v||[]).map(l=>`<span class="chip">${l}</span>`).join('')}</div>`,
         score_credito: v => `<span style="color:${v>700?'var(--success)':v>500?'var(--warning)':'var(--danger)'}">${v}</span>` }
     );
+    renderPagination('usuarios', data.length);
   } catch (err) {
     tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`;
   }
 }
+pgLoaders.usuarios = loadUsuarios;
 
 async function crearUsuario() {
   const body = {
@@ -1586,6 +1784,7 @@ async function eliminarUsuario() {
 
 // ── CUENTAS ──────────────────────────────────────────────
 // ── CUENTAS ──────────────────────────────────────────────
+pgLoaders.cuentas = () => loadCuentas();
 function onCampoCuentaChange() {
   const campo = document.getElementById('upd-c-campo').value;
   const wrap = document.getElementById('upd-c-valor-wrap');
@@ -1605,6 +1804,7 @@ function onCampoCuentaChange() {
 async function loadCuentas() {
   const tableEl = document.getElementById('cuentas-table');
   try {
+    const { page, size } = pgState.cuentas;
     const params = new URLSearchParams();
     const tipo = document.getElementById('f-c-tipo')?.value;
     const min  = document.getElementById('f-c-min')?.value;
@@ -1612,17 +1812,20 @@ async function loadCuentas() {
     if (tipo) params.append('tipo', tipo);
     if (min)  params.append('min_saldo', min);
     if (max)  params.append('max_saldo', max);
-    params.append('limit', '50');
+    params.append('limit', size);
+    params.append('skip', page * size);
     tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando cuentas...</div>';
     const r = await fetch(`${API}/cuentas?${params}`);
     const json = await r.json();
     if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
-    tableEl.innerHTML = buildTable(json.data || [],
+    const data = json.data || [];
+    tableEl.innerHTML = buildTable(data,
       ['id_cuenta','tipo','saldo','moneda','limite_diario','estado','propietario'],
       { saldo: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
         limite_diario: v => `Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}`,
         estado: v => `<span class="badge ${v?'badge-green':'badge-red'}">${v?'Activa':'Inactiva'}</span>` }
     );
+    renderPagination('cuentas', data.length);
   } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
@@ -1676,9 +1879,11 @@ async function eliminarCuenta() {
 }
 
 // ── TRANSACCIONES ────────────────────────────────────────
+pgLoaders.transacciones = () => loadTransacciones();
 async function loadTransacciones() {
   const tableEl = document.getElementById('transacciones-table');
   try {
+    const { page, size } = pgState.transacciones;
     const params = new URLSearchParams();
     const tipo   = document.getElementById('f-t-tipo')?.value;
     const fraude = document.getElementById('f-t-fraude')?.value;
@@ -1686,16 +1891,19 @@ async function loadTransacciones() {
     if (tipo)   params.append('tipo', tipo);
     if (fraude) params.append('es_fraudulenta', fraude);
     if (min)    params.append('min_monto', min);
-    params.append('limit', '50');
+    params.append('limit', size);
+    params.append('skip', page * size);
     tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando transacciones...</div>';
     const r = await fetch(`${API}/transacciones?${params}`);
     const json = await r.json();
     if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
-    tableEl.innerHTML = buildTable(json.data || [],
+    const data = json.data || [];
+    tableEl.innerHTML = buildTable(data,
       ['id_transaccion','tipo','monto','moneda','canal','fecha','es_fraudulenta','cuenta_origen','cuenta_destino'],
       { monto: v => `<strong>Q${Number(v).toLocaleString('es',{maximumFractionDigits:2})}</strong>`,
         es_fraudulenta: v => `<span class="badge ${v?'badge-red':'badge-green'}">${v?'FRAUDE':'OK'}</span>` }
     );
+    renderPagination('transacciones', data.length);
   } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
@@ -1744,32 +1952,47 @@ async function marcarFraudulenta() {
 }
 
 // ── DISPOSITIVOS ─────────────────────────────────────────
+pgLoaders.dispositivos = () => loadDispositivos();
 async function loadDispositivos() {
   const tableEl = document.getElementById('dispositivos-table');
   try {
+    const { page, size } = pgState.dispositivos;
     const tipo = document.getElementById('f-d-tipo')?.value;
-    const params = tipo ? `?tipo=${tipo}&limit=50` : '?limit=50';
+    const params = new URLSearchParams();
+    if (tipo) params.append('tipo', tipo);
+    params.append('limit', size);
+    params.append('skip', page * size);
     tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando dispositivos...</div>';
-    const r = await fetch(`${API}/dispositivos${params}`);
+    const r = await fetch(`${API}/dispositivos?${params}`);
     const json = await r.json();
     if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
-    tableEl.innerHTML = buildTable(json.data || [],
+    const data = json.data || [];
+    tableEl.innerHTML = buildTable(data,
       ['id_dispositivo','tipo','ip','sistema_operativo','marca','ubicacion','verificado'],
       { verificado: v => v
         ? `<span class="badge badge-green"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-check"/></svg>Sí</span>`
         : `<span class="badge badge-red"><svg class="ico ico-sm" style="width:11px;height:11px"><use href="#i-x"/></svg>No</span>` }
     );
+    renderPagination('dispositivos', data.length);
   } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
 // ── UBICACIONES ──────────────────────────────────────────
+pgLoaders.ubicaciones = () => loadUbicaciones();
 async function loadUbicaciones() {
   const tableEl = document.getElementById('ubicaciones-table');
   try {
-    const r = await fetch(`${API}/ubicaciones`);
+    const { page, size } = pgState.ubicaciones;
+    const params = new URLSearchParams();
+    params.append('limit', size);
+    params.append('skip', page * size);
+    tableEl.innerHTML = '<div class="loading"><div class="spinner"></div>Cargando ubicaciones...</div>';
+    const r = await fetch(`${API}/ubicaciones?${params}`);
     const json = await r.json();
     if (!json.success) { tableEl.innerHTML = `<div class="empty-state">Error: ${json.error}</div>`; return; }
-    tableEl.innerHTML = buildTable(json.data || [], ['id_ubicacion','pais','ciudad','latitud','longitud']);
+    const data = json.data || [];
+    tableEl.innerHTML = buildTable(data, ['id_ubicacion','pais','ciudad','latitud','longitud']);
+    renderPagination('ubicaciones', data.length);
   } catch(err) { tableEl.innerHTML = `<div class="empty-state">Error de conexión: ${err.message}</div>`; }
 }
 
@@ -2066,23 +2289,122 @@ async function cargarTiposRelaciones() {
   }
 }
 
+// ── SCHEMA DE RELACIONES ─────────────────────────────────
+const REL_SCHEMA = {
+  'REALIZA':              { origen: 'Usuario',     destino: 'Transaccion', props: ['fecha','monto','canal'] },
+  'TIENE':                { origen: 'Usuario',     destino: 'Cuenta',      props: ['fecha_asociacion','tipo_relacion','activo'] },
+  'USA':                  { origen: 'Usuario',     destino: 'Dispositivo', props: ['primer_uso','ultimo_uso','frecuencia'] },
+  'VIVE_EN':              { origen: 'Usuario',     destino: 'Ubicacion',   props: ['fecha_inicio','es_actual','tipo'] },
+  'ORIGEN':               { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','validada'] },
+  'DESTINO':              { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','confirmado'] },
+  'REALIZADA_DESDE':      { origen: 'Transaccion', destino: 'Dispositivo', props: ['ip','fecha','riesgo'] },
+  'OCURRE_EN':            { origen: 'Transaccion', destino: 'Ubicacion',   props: ['fecha','pais','riesgo'] },
+  'PERTENECE_A':          { origen: 'Cuenta',      destino: 'Usuario',     props: ['fecha','principal','estado'] },
+  'ALERTA':               { origen: 'Transaccion', destino: 'Transaccion', props: ['motivo','nivel_riesgo','fecha_alerta'] },
+  'PATRON_SIMILAR':       { origen: 'Transaccion', destino: 'Transaccion', props: ['similitud','tipo_patron','detectado_en'] },
+  'MISMA_IP':             { origen: 'Transaccion', destino: 'Transaccion', props: ['ip','fecha_deteccion'] },
+  'TRANSFERENCIA_A':      { origen: 'Cuenta',      destino: 'Cuenta',      props: ['monto_total','frecuencia','ultima_fecha'] },
+  'COMPARTE_DISPOSITIVO': { origen: 'Usuario',     destino: 'Usuario',     props: ['dispositivo_id','primera_deteccion'] },
+};
+
+// Convierte string al tipo JS correcto (true/false/número/texto)
+function parseVal(v) {
+  if (v === 'true')  return true;
+  if (v === 'false') return false;
+  if (typeof v === 'string' && v.trim() !== '' && !isNaN(v)) return parseFloat(v);
+  return v;
+}
+
+// Agrega una fila campo+valor a un contenedor
+function addPropRow(containerId) {
+  const c = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  row.style = 'display:grid;grid-template-columns:1fr 1fr auto;gap:.5rem;align-items:center';
+  row.innerHTML = `
+    <input type="text" placeholder="nombre" class="input" style="margin:0">
+    <input type="text" placeholder="valor" class="input" style="margin:0">
+    <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+  `;
+  c.appendChild(row);
+}
+
+// Agrega una fila solo de nombre a un contenedor
+function addDelRow(containerId) {
+  const c = document.getElementById(containerId);
+  const row = document.createElement('div');
+  row.className = 'prop-row';
+  row.style = 'display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:center';
+  row.innerHTML = `
+    <input type="text" placeholder="nombre de propiedad" class="input" style="margin:0">
+    <button class="btn" onclick="removePropRow(this)" title="Quitar" style="padding:.4rem .65rem;min-width:0">✕</button>
+  `;
+  c.appendChild(row);
+}
+
+function removePropRow(btn) {
+  const container = btn.closest('.prop-row').parentElement;
+  if (container.querySelectorAll('.prop-row').length <= 1) {
+    showToast('Debe haber al menos una fila', 'error'); return;
+  }
+  btn.closest('.prop-row').remove();
+}
+
+// Lee filas campo+valor y devuelve objeto {campo: valor_tipado}
+function getPropRows(containerId) {
+  const props = {};
+  document.querySelectorAll(`#${containerId} .prop-row`).forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length >= 2) {
+      const k = inputs[0].value.trim();
+      const v = inputs[1].value.trim();
+      if (k) props[k] = parseVal(v);
+    }
+  });
+  return props;
+}
+
+// Lee filas de nombre y devuelve array de strings
+function getDelRows(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .prop-row input`))
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+// Handlers auto-fill al cambiar tipo de relación
+function onRelPropTipoChange() {
+  const s = REL_SCHEMA[document.getElementById('rel-prop-tipo-rel').value] || {};
+  document.getElementById('rel-prop-tipo-origen').value  = s.origen  || '';
+  document.getElementById('rel-prop-tipo-destino').value = s.destino || '';
+}
+function onRelDelTipoChange() {
+  const s = REL_SCHEMA[document.getElementById('rel-del-tipo-rel').value] || {};
+  document.getElementById('rel-del-tipo-origen').value  = s.origen  || '';
+  document.getElementById('rel-del-tipo-destino').value = s.destino || '';
+}
+function updateCampoSelect(selectId, tipo) {
+  const sel = document.getElementById(selectId);
+  const props = (REL_SCHEMA[tipo] || {}).props || [];
+  sel.innerHTML = '<option value="">-- Seleccionar campo --</option>' +
+    props.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+function onRelBulkPropTipoChange() {
+  updateCampoSelect('rel-bulk-prop-campo', document.getElementById('rel-bulk-prop-tipo').value);
+}
+function onRelBulkDelTipoChange() {
+  updateCampoSelect('rel-bulk-del-campo', document.getElementById('rel-bulk-del-tipo').value);
+}
+
 // ── GESTIÓN BULK DE PROPIEDADES EN NODOS ────────────────
 async function agregarPropiedadesMultiples() {
-  const tipo = document.getElementById('bulk-prop-tipo').value;
+  const tipo   = document.getElementById('bulk-prop-tipo').value;
   const idsStr = document.getElementById('bulk-prop-ids').value;
-  const propsStr = document.getElementById('bulk-prop-props').value;
+  if (!tipo || !idsStr) { showToast('Selecciona tipo e IDs', 'error'); return; }
 
-  if (!tipo || !idsStr || !propsStr) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  const ids = idsStr.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  if (!ids.length) { showToast('Ingresa al menos un ID válido', 'error'); return; }
 
-  const ids = idsStr.split(',').map(id => parseInt(id.trim()));
-  const propiedades = {};
-  propsStr.split(',').forEach(prop => {
-    const [key, val] = prop.split(':').map(s => s.trim());
-    propiedades[key] = isNaN(val) ? val : parseFloat(val);
-  });
+  const propiedades = getPropRows('bulk-prop-rows');
+  if (!Object.keys(propiedades).length) { showToast('Ingresa al menos una propiedad', 'error'); return; }
 
   try {
     const r = await fetch(`${API}/nodos/bulk/propiedades`, {
@@ -2091,34 +2413,29 @@ async function agregarPropiedadesMultiples() {
     });
     const result = await r.json();
     if (result.success) {
-      showToast(`${result.updated} nodos actualizados`, 'success');
+      showToast(`${result.updated} nodo(s) actualizado(s)`, 'success');
       document.getElementById('bulk-prop-resultado').innerHTML = `
         <div class="result-card success">
-          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} propiedades agregadas</div>
-        </div>
-      `;
-      document.getElementById('bulk-prop-ids').value = '';
-      document.getElementById('bulk-prop-props').value = '';
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} nodo(s) actualizado(s)</div>
+          <div class="result-body">${Object.entries(propiedades).map(([k,v])=>`<div><span class="k">${k}:</span> ${v}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('bulk-prop-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function eliminarPropiedadesMultiples() {
-  const tipo = document.getElementById('bulk-del-tipo').value;
+  const tipo   = document.getElementById('bulk-del-tipo').value;
   const idsStr = document.getElementById('bulk-del-ids').value;
-  const propsStr = document.getElementById('bulk-del-props').value;
+  if (!tipo || !idsStr) { showToast('Selecciona tipo e IDs', 'error'); return; }
 
-  if (!tipo || !idsStr || !propsStr) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  const ids = idsStr.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  if (!ids.length) { showToast('Ingresa al menos un ID válido', 'error'); return; }
 
-  const ids = idsStr.split(',').map(id => parseInt(id.trim()));
-  const propiedades = propsStr.split(',').map(p => p.trim());
+  const propiedades = getDelRows('bulk-del-rows');
+  if (!propiedades.length) { showToast('Ingresa al menos una propiedad', 'error'); return; }
 
   try {
     const r = await fetch(`${API}/nodos/bulk/propiedades`, {
@@ -2127,41 +2444,37 @@ async function eliminarPropiedadesMultiples() {
     });
     const result = await r.json();
     if (result.success) {
-      showToast(`${result.updated} nodos actualizados`, 'success');
+      showToast(`${propiedades.length} propiedad(es) eliminada(s) de ${result.updated} nodo(s)`, 'success');
       document.getElementById('bulk-del-resultado').innerHTML = `
         <div class="result-card danger">
-          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas de ${result.updated} nodos</div>
-        </div>
-      `;
-      document.getElementById('bulk-del-ids').value = '';
-      document.getElementById('bulk-del-props').value = '';
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedad(es) eliminada(s) de ${result.updated} nodo(s)</div>
+          <div class="result-body">${propiedades.map(p=>`<div>− ${p}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('bulk-del-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 // ── GESTIÓN DE PROPIEDADES EN RELACIONES ────────────────
 async function agregarPropiedadRelacion() {
-  const tipoOrigen = document.getElementById('rel-prop-tipo-origen').value;
-  const idOrigen = document.getElementById('rel-prop-id-origen').value;
+  const tipoOrigen  = document.getElementById('rel-prop-tipo-origen').value;
+  const idOrigen    = document.getElementById('rel-prop-id-origen').value;
   const tipoDestino = document.getElementById('rel-prop-tipo-destino').value;
-  const idDestino = document.getElementById('rel-prop-id-destino').value;
+  const idDestino   = document.getElementById('rel-prop-id-destino').value;
   const tipoRelacion = document.getElementById('rel-prop-tipo-rel').value;
-  const propNombre = document.getElementById('rel-prop-nombre').value;
-  const propValor = document.getElementById('rel-prop-valor').value;
+  const propNombre  = document.getElementById('rel-prop-nombre').value.trim();
+  const propValor   = document.getElementById('rel-prop-valor').value.trim();
 
-  if (!tipoOrigen || !idOrigen || !tipoDestino || !idDestino || !tipoRelacion || !propNombre || !propValor) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  if (!tipoRelacion) { showToast('Selecciona el tipo de relación', 'error'); return; }
+  if (!idOrigen || !idDestino) { showToast('Ingresa los IDs de origen y destino', 'error'); return; }
+  if (!propNombre || !propValor) { showToast('Ingresa nombre y valor de la propiedad', 'error'); return; }
+
+  const propiedades = { [propNombre]: parseVal(propValor) };
 
   try {
-    const body = JSON.parse(propValor);
-    const propiedades = { [propNombre]: body };
-    const r = await fetch(`${API}/relaciones/123/propiedades`, {
+    const r = await fetch(`${API}/relaciones/propiedades`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo_origen: tipoOrigen, id_origen: parseInt(idOrigen),
@@ -2175,36 +2488,30 @@ async function agregarPropiedadRelacion() {
       document.getElementById('rel-prop-resultado').innerHTML = `
         <div class="result-card success">
           <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>Relación actualizada</div>
-          <div class="result-body">
-            ${Object.entries(result.data).map(([k,v]) => `<div><span class="k">${k}:</span>${v}</div>`).join('')}
-          </div>
-        </div>
-      `;
+          <div class="result-body">${Object.entries(result.data).map(([k,v])=>`<div><span class="k">${k}:</span> ${v}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('rel-prop-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function eliminarPropiedadRelacion() {
-  const tipoOrigen = document.getElementById('rel-del-tipo-origen').value;
-  const idOrigen = document.getElementById('rel-del-id-origen').value;
+  const tipoOrigen  = document.getElementById('rel-del-tipo-origen').value;
+  const idOrigen    = document.getElementById('rel-del-id-origen').value;
   const tipoDestino = document.getElementById('rel-del-tipo-destino').value;
-  const idDestino = document.getElementById('rel-del-id-destino').value;
+  const idDestino   = document.getElementById('rel-del-id-destino').value;
   const tipoRelacion = document.getElementById('rel-del-tipo-rel').value;
-  const propsStr = document.getElementById('rel-del-props').value;
 
-  if (!tipoOrigen || !idOrigen || !tipoDestino || !idDestino || !tipoRelacion || !propsStr) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  if (!tipoRelacion) { showToast('Selecciona el tipo de relación', 'error'); return; }
+  if (!idOrigen || !idDestino) { showToast('Ingresa los IDs de origen y destino', 'error'); return; }
 
-  const propiedades = propsStr.split(',').map(p => p.trim());
+  const propiedades = getDelRows('rel-del-rows');
+  if (!propiedades.length) { showToast('Ingresa al menos una propiedad', 'error'); return; }
 
   try {
-    const r = await fetch(`${API}/relaciones/123/propiedades`, {
+    const r = await fetch(`${API}/relaciones/propiedades`, {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo_origen: tipoOrigen, id_origen: parseInt(idOrigen),
@@ -2214,99 +2521,87 @@ async function eliminarPropiedadRelacion() {
     });
     const result = await r.json();
     if (result.success) {
-      showToast(`${propiedades.length} propiedades eliminadas`, 'success');
+      showToast(`${propiedades.length} propiedad(es) eliminada(s)`, 'success');
       document.getElementById('rel-del-resultado').innerHTML = `
         <div class="result-card danger">
-          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas</div>
-        </div>
-      `;
-      document.getElementById('rel-del-props').value = '';
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedad(es) eliminada(s)</div>
+          <div class="result-body">${propiedades.map(p=>`<div>− ${p}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('rel-del-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function agregarPropiedadesMultiplesRelaciones() {
   const tipoRelacion = document.getElementById('rel-bulk-prop-tipo').value;
-  const campoFiltro = document.getElementById('rel-bulk-prop-campo').value;
-  const valorFiltro = document.getElementById('rel-bulk-prop-valor').value;
-  const propsStr = document.getElementById('rel-bulk-prop-props').value;
+  const campoFiltro  = document.getElementById('rel-bulk-prop-campo').value;
+  const valorFiltro  = document.getElementById('rel-bulk-prop-valor').value.trim();
 
-  if (!tipoRelacion || !campoFiltro || !valorFiltro || !propsStr) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  if (!tipoRelacion) { showToast('Selecciona el tipo de relación', 'error'); return; }
+  if (!campoFiltro || !valorFiltro) { showToast('Completa el campo y valor de filtro', 'error'); return; }
 
-  const propiedades = {};
-  propsStr.split(',').forEach(prop => {
-    const [key, val] = prop.split(':').map(s => s.trim());
-    propiedades[key] = isNaN(val) ? val : parseFloat(val);
-  });
+  const propiedades = getPropRows('rel-bulk-prop-rows');
+  if (!Object.keys(propiedades).length) { showToast('Ingresa al menos una propiedad', 'error'); return; }
 
   try {
     const r = await fetch(`${API}/relaciones/bulk/propiedades`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo_relacion: tipoRelacion,
-        filtro: { campo: campoFiltro, valor: valorFiltro },
+        filtro: { campo: campoFiltro, valor: parseVal(valorFiltro) },
         propiedades
       })
     });
     const result = await r.json();
     if (result.success) {
-      showToast(`${result.updated} relaciones actualizadas`, 'success');
+      showToast(`${result.updated} relación(es) actualizada(s)`, 'success');
       document.getElementById('rel-bulk-prop-resultado').innerHTML = `
         <div class="result-card success">
-          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} relaciones actualizadas</div>
-        </div>
-      `;
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-check"/></svg>${result.updated} relación(es) actualizada(s)</div>
+          <div class="result-body">${Object.entries(propiedades).map(([k,v])=>`<div><span class="k">${k}:</span> ${v}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('rel-bulk-prop-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function eliminarPropiedadesMultiplesRelaciones() {
   const tipoRelacion = document.getElementById('rel-bulk-del-tipo').value;
-  const campoFiltro = document.getElementById('rel-bulk-del-campo').value;
-  const valorFiltro = document.getElementById('rel-bulk-del-valor').value;
-  const propsStr = document.getElementById('rel-bulk-del-props').value;
+  const campoFiltro  = document.getElementById('rel-bulk-del-campo').value;
+  const valorFiltro  = document.getElementById('rel-bulk-del-valor').value.trim();
 
-  if (!tipoRelacion || !campoFiltro || !valorFiltro || !propsStr) {
-    showToast('Por favor completa todos los campos', 'error');
-    return;
-  }
+  if (!tipoRelacion) { showToast('Selecciona el tipo de relación', 'error'); return; }
+  if (!campoFiltro || !valorFiltro) { showToast('Completa el campo y valor de filtro', 'error'); return; }
 
-  const propiedades = propsStr.split(',').map(p => p.trim());
+  const propiedades = getDelRows('rel-bulk-del-rows');
+  if (!propiedades.length) { showToast('Ingresa al menos una propiedad', 'error'); return; }
 
   try {
     const r = await fetch(`${API}/relaciones/bulk/propiedades`, {
       method: 'DELETE', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo_relacion: tipoRelacion,
-        filtro: { campo: campoFiltro, valor: valorFiltro },
+        filtro: { campo: campoFiltro, valor: parseVal(valorFiltro) },
         propiedades
       })
     });
     const result = await r.json();
     if (result.success) {
-      showToast(`${result.updated} relaciones actualizadas`, 'success');
+      showToast(`${propiedades.length} propiedad(es) eliminada(s) de ${result.updated} relación(es)`, 'success');
       document.getElementById('rel-bulk-del-resultado').innerHTML = `
         <div class="result-card danger">
-          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedades eliminadas de ${result.updated} relaciones</div>
-        </div>
-      `;
+          <div class="result-title"><svg class="ico ico-sm"><use href="#i-trash"/></svg>${propiedades.length} propiedad(es) eliminada(s) de ${result.updated} relación(es)</div>
+          <div class="result-body">${propiedades.map(p=>`<div>− ${p}</div>`).join('')}</div>
+        </div>`;
     } else {
       showToast(result.error, 'error');
+      document.getElementById('rel-bulk-del-resultado').innerHTML = `<div class="result-card danger"><div class="result-title">Error: ${result.error}</div></div>`;
     }
-  } catch (err) {
-    showToast(err.message, 'error');
-  }
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 // ── INIT ─────────────────────────────────────────────────
