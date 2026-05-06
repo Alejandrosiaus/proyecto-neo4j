@@ -1261,32 +1261,18 @@
         <div class="form-group">
           <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
           <select id="rel-prop-tipo-rel" class="input" onchange="onRelPropTipoChange()">
-            <option value="">-- Seleccionar tipo --</option>
-            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
-            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
-            <option value="USA">USA (Usuario → Dispositivo)</option>
-            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
-            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
-            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
-            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
-            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
-            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
-            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
-            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
-            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
-            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
-            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+            <option value="">-- Cargando tipos... --</option>
           </select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
               <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Origen</label>
-              <input type="text" id="rel-prop-tipo-origen" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <input type="text" id="rel-prop-tipo-origen" class="input" placeholder="Auto-completado o escribe manualmente">
               <label style="font-size:.85rem;color:var(--text-dim)">ID Origen</label>
               <input type="number" id="rel-prop-id-origen" placeholder="ID del nodo origen" class="input">
             </div>
             <div>
               <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Destino</label>
-              <input type="text" id="rel-prop-tipo-destino" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <input type="text" id="rel-prop-tipo-destino" class="input" placeholder="Auto-completado o escribe manualmente">
               <label style="font-size:.85rem;color:var(--text-dim)">ID Destino</label>
               <input type="number" id="rel-prop-id-destino" placeholder="ID del nodo destino" class="input">
             </div>
@@ -1315,32 +1301,18 @@
         <div class="form-group">
           <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
           <select id="rel-del-tipo-rel" class="input" onchange="onRelDelTipoChange()">
-            <option value="">-- Seleccionar tipo --</option>
-            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
-            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
-            <option value="USA">USA (Usuario → Dispositivo)</option>
-            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
-            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
-            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
-            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
-            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
-            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
-            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
-            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
-            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
-            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
-            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+            <option value="">-- Cargando tipos... --</option>
           </select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
               <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Origen</label>
-              <input type="text" id="rel-del-tipo-origen" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <input type="text" id="rel-del-tipo-origen" class="input" placeholder="Auto-completado o escribe manualmente">
               <label style="font-size:.85rem;color:var(--text-dim)">ID Origen</label>
               <input type="number" id="rel-del-id-origen" placeholder="ID del nodo origen" class="input">
             </div>
             <div>
               <label style="font-size:.85rem;color:var(--text-dim)">Tipo Nodo Destino</label>
-              <input type="text" id="rel-del-tipo-destino" class="input" readonly style="background:var(--surface-2);color:var(--text-dim);cursor:default" placeholder="Auto-completado">
+              <input type="text" id="rel-del-tipo-destino" class="input" placeholder="Auto-completado o escribe manualmente">
               <label style="font-size:.85rem;color:var(--text-dim)">ID Destino</label>
               <input type="number" id="rel-del-id-destino" placeholder="ID del nodo destino" class="input">
             </div>
@@ -1367,21 +1339,7 @@
         <div class="form-group">
           <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
           <select id="rel-bulk-prop-tipo" class="input" onchange="onRelBulkPropTipoChange()">
-            <option value="">-- Seleccionar tipo --</option>
-            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
-            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
-            <option value="USA">USA (Usuario → Dispositivo)</option>
-            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
-            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
-            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
-            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
-            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
-            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
-            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
-            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
-            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
-            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
-            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+            <option value="">-- Cargando tipos... --</option>
           </select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
@@ -1418,21 +1376,7 @@
         <div class="form-group">
           <label style="font-size:.85rem;color:var(--text-dim)">Tipo de Relación</label>
           <select id="rel-bulk-del-tipo" class="input" onchange="onRelBulkDelTipoChange()">
-            <option value="">-- Seleccionar tipo --</option>
-            <option value="REALIZA">REALIZA (Usuario → Transaccion)</option>
-            <option value="TIENE">TIENE (Usuario → Cuenta)</option>
-            <option value="USA">USA (Usuario → Dispositivo)</option>
-            <option value="VIVE_EN">VIVE_EN (Usuario → Ubicacion)</option>
-            <option value="ORIGEN">ORIGEN (Transaccion → Cuenta)</option>
-            <option value="DESTINO">DESTINO (Transaccion → Cuenta)</option>
-            <option value="REALIZADA_DESDE">REALIZADA_DESDE (Transaccion → Dispositivo)</option>
-            <option value="OCURRE_EN">OCURRE_EN (Transaccion → Ubicacion)</option>
-            <option value="PERTENECE_A">PERTENECE_A (Cuenta → Usuario)</option>
-            <option value="ALERTA">ALERTA (Transaccion → Transaccion)</option>
-            <option value="PATRON_SIMILAR">PATRON_SIMILAR (Transaccion → Transaccion)</option>
-            <option value="MISMA_IP">MISMA_IP (Transaccion → Transaccion)</option>
-            <option value="TRANSFERENCIA_A">TRANSFERENCIA_A (Cuenta → Cuenta)</option>
-            <option value="COMPARTE_DISPOSITIVO">COMPARTE_DISPOSITIVO (Usuario → Usuario)</option>
+            <option value="">-- Cargando tipos... --</option>
           </select>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
             <div>
@@ -2103,13 +2047,19 @@ function buildTable(data, cols, formatters = {}) {
     const cells = cols.map(c => {
       const val = row[c];
       const fmt = formatters[c];
-      const display = fmt 
-        ? fmt(val) 
-        : (val === null || val === undefined 
-            ? '<span style="color:var(--text-dim)">—</span>' 
-            : (typeof val === 'object' && val !== null && val.low !== undefined
-              ? val.low 
-              : String(val)));
+      let display;
+      if (fmt) {
+        display = fmt(val);
+      } else if (val === null || val === undefined) {
+        display = '<span style="color:var(--text-dim)">—</span>';
+      } else if (typeof val === 'object') {
+        // Neo4j Integer {low, high} que escapó del servidor
+        if (val.low !== undefined) display = String(val.low);
+        // Cualquier otro objeto → intentar toString(), si falla usar JSON
+        else { const s = val.toString(); display = s !== '[object Object]' ? s : JSON.stringify(val); }
+      } else {
+        display = String(val);
+      }
       return `<td>${display}</td>`;
     }).join('');
     return `<tr>${cells}</tr>`;
@@ -2290,22 +2240,63 @@ async function cargarTiposRelaciones() {
 }
 
 // ── SCHEMA DE RELACIONES ─────────────────────────────────
+// Corregido con las direcciones reales de la DB (confirmado desde server.js)
 const REL_SCHEMA = {
-  'REALIZA':              { origen: 'Usuario',     destino: 'Transaccion', props: ['fecha','monto','canal'] },
-  'TIENE':                { origen: 'Usuario',     destino: 'Cuenta',      props: ['fecha_asociacion','tipo_relacion','activo'] },
-  'USA':                  { origen: 'Usuario',     destino: 'Dispositivo', props: ['primer_uso','ultimo_uso','frecuencia'] },
-  'VIVE_EN':              { origen: 'Usuario',     destino: 'Ubicacion',   props: ['fecha_inicio','es_actual','tipo'] },
-  'ORIGEN':               { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','validada'] },
-  'DESTINO':              { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','confirmado'] },
-  'REALIZADA_DESDE':      { origen: 'Transaccion', destino: 'Dispositivo', props: ['ip','fecha','riesgo'] },
-  'OCURRE_EN':            { origen: 'Transaccion', destino: 'Ubicacion',   props: ['fecha','pais','riesgo'] },
-  'PERTENECE_A':          { origen: 'Cuenta',      destino: 'Usuario',     props: ['fecha','principal','estado'] },
-  'ALERTA':               { origen: 'Transaccion', destino: 'Transaccion', props: ['motivo','nivel_riesgo','fecha_alerta'] },
-  'PATRON_SIMILAR':       { origen: 'Transaccion', destino: 'Transaccion', props: ['similitud','tipo_patron','detectado_en'] },
-  'MISMA_IP':             { origen: 'Transaccion', destino: 'Transaccion', props: ['ip','fecha_deteccion'] },
-  'TRANSFERENCIA_A':      { origen: 'Cuenta',      destino: 'Cuenta',      props: ['monto_total','frecuencia','ultima_fecha'] },
-  'COMPARTE_DISPOSITIVO': { origen: 'Usuario',     destino: 'Usuario',     props: ['dispositivo_id','primera_deteccion'] },
+  'TIENE':               { origen: 'Usuario',     destino: 'Cuenta',      props: ['fecha_asociacion','tipo_relacion','activo'] },
+  'USA':                 { origen: 'Usuario',     destino: 'Dispositivo', props: ['primer_uso','ultimo_uso','frecuencia'] },
+  'REALIZA':             { origen: 'Cuenta',      destino: 'Transaccion', props: ['fecha','monto','canal'] },        // Cuenta→Transaccion
+  'REGISTRADO_EN':       { origen: 'Usuario',     destino: 'Ubicacion',   props: ['fecha_inicio','es_actual','tipo'] },
+  'UBICADO_EN':          { origen: 'Dispositivo', destino: 'Ubicacion',   props: ['fecha','precision','tipo'] },
+  'ORIGEN':              { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','validada'] },
+  'DESTINO':             { origen: 'Transaccion', destino: 'Cuenta',      props: ['monto','moneda','confirmado'] },
+  'OCURRE_EN':           { origen: 'Transaccion', destino: 'Ubicacion',   props: ['fecha','pais','riesgo'] },
+  'PERTENECE_A':         { origen: 'Cuenta',      destino: 'Usuario',     props: ['fecha','principal','estado'] },
+  'REALIZADA_DESDE':     { origen: 'Transaccion', destino: 'Dispositivo', props: ['ip','fecha','riesgo'] },
+  'ALERTA':              { origen: 'Transaccion', destino: 'Transaccion', props: ['motivo','nivel_riesgo','fecha_alerta'] },
+  'PATRON_SIMILAR':      { origen: 'Transaccion', destino: 'Transaccion', props: ['similitud','tipo_patron','detectado_en'] },
+  'MISMA_IP':            { origen: 'Transaccion', destino: 'Transaccion', props: ['ip','fecha_deteccion'] },
+  'TRANSFERENCIA_A':     { origen: 'Cuenta',      destino: 'Cuenta',      props: ['monto_total','frecuencia','ultima_fecha'] },
+  'COMPARTE_DISPOSITIVO':{ origen: 'Usuario',     destino: 'Usuario',     props: ['dispositivo_id','primera_deteccion'] },
 };
+
+// Carga los tipos de relación reales desde la API y rellena los 4 dropdowns
+async function loadRelTiposDropdowns() {
+  const selectIds = ['rel-prop-tipo-rel','rel-del-tipo-rel','rel-bulk-prop-tipo','rel-bulk-del-tipo'];
+  try {
+    const r = await fetch(`${API}/relaciones/tipos`);
+    const result = await r.json();
+    if (!result.success || !result.data.length) return;
+
+    const tipos = result.data.map(d => d.tipo);
+    // Guardar selección actual antes de reemplazar
+    const prevVals = selectIds.map(id => document.getElementById(id)?.value || '');
+
+    selectIds.forEach((id, i) => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Seleccionar tipo --</option>' +
+        tipos.map(t => {
+          const s = REL_SCHEMA[t] || {};
+          const hint = s.origen ? ` (${s.origen} → ${s.destino})` : '';
+          return `<option value="${t}">${t}${hint}</option>`;
+        }).join('');
+      // Restaurar selección previa si sigue siendo válida
+      if (prevVals[i] && tipos.includes(prevVals[i])) sel.value = prevVals[i];
+    });
+  } catch(e) {
+    // Fallback: construir desde REL_SCHEMA si la API falla
+    const tipos = Object.keys(REL_SCHEMA);
+    selectIds.forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Seleccionar tipo --</option>' +
+        tipos.map(t => {
+          const s = REL_SCHEMA[t];
+          return `<option value="${t}">${t} (${s.origen} → ${s.destino})</option>`;
+        }).join('');
+    });
+  }
+}
 
 // Convierte string al tipo JS correcto (true/false/número/texto)
 function parseVal(v) {
@@ -2607,6 +2598,7 @@ async function eliminarPropiedadesMultiplesRelaciones() {
 // ── INIT ─────────────────────────────────────────────────
 checkHealth();
 loadDashboard();
+loadRelTiposDropdowns(); // Poblar dropdowns de relaciones con tipos reales de la DB
 </script>
 </body>
 </html>

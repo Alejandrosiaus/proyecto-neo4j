@@ -30,8 +30,19 @@ const convertProps = (props) => {
   if (!props) return {};
   const result = {};
   for (const [key, val] of Object.entries(props)) {
-    if (neo4j.isInt(val)) {
+    if (val === null || val === undefined) {
+      result[key] = val;
+    } else if (neo4j.isInt(val)) {
+      // Neo4j Integer → número JS plano
       result[key] = val.toNumber();
+    } else if (Array.isArray(val)) {
+      // Lista: convertir cada elemento recursivamente
+      result[key] = val.map(v => neo4j.isInt(v) ? v.toNumber() : (typeof v === 'object' && v !== null ? convertProps(v) : v));
+    } else if (typeof val === 'object') {
+      // Neo4j Date, DateTime, LocalDate, Duration, Point, etc.
+      // Todos estos tipos tienen un .toString() que produce ISO strings (e.g. "2024-03-15")
+      const str = val.toString();
+      result[key] = str !== '[object Object]' ? str : JSON.stringify(val);
     } else {
       result[key] = val;
     }
@@ -489,11 +500,15 @@ app.get('/api/transacciones', async (req, res) => {
        ORDER BY t.fecha DESC SKIP toInteger($skip) LIMIT toInteger($limit)`,
       params
     );
-    const txns = result.records.map(r => ({
-      ...convertProps(r.get('t').properties),
-      cuenta_origen: r.get('origen'),
-      cuenta_destino: r.get('destino')
-    }));
+    const txns = result.records.map(r => {
+      const origen  = r.get('origen');
+      const destino = r.get('destino');
+      return {
+        ...convertProps(r.get('t').properties),
+        cuenta_origen:  neo4j.isInt(origen)  ? origen.toNumber()  : origen,
+        cuenta_destino: neo4j.isInt(destino) ? destino.toNumber() : destino
+      };
+    });
     res.json({ success: true, data: txns });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
